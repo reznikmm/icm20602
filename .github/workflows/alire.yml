@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Build with Alire
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        repository: AdaCore/Ada_Drivers_Library
+        path: adl
+    - uses: alire-project/setup-alire@v2
+    - name: Build project
+      run: alr build
+    - name: Build examples
+      run: |
+        echo cd examples
+        alr build
