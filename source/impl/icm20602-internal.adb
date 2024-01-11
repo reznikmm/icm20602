@@ -108,42 +108,56 @@ package body ICM20602.Internal is
       use type HAL.UInt8;
 
       FCHOICE_B : constant HAL.UInt8 :=
-        (if Value.Low_Power then 0
-         else
-           (case Value.Gyroscope.Filter.Bandwidth is
-              when 250  => 0,
-              when 176  => 1,
-              when 92   => 2,
-              when 41   => 3,
-              when 20   => 4,
-              when 10   => 5,
-              when 5    => 6,
-              when 3281 => 7));
+        (if Value.Gyroscope.Power = Low_Noise then
+           (case Value.Gyroscope.Filter.Rate is
+               when Rate_1kHz | Rate_8kHz => 0,
+               when Rate_32kHz =>
+                 (case Value.Gyroscope.Filter.Bandwidth_32kHz is
+                     when 8173 => 1,
+                     when 3281 => 2,
+                     when others => 0))
+         else 0);
 
       FS_SEL : constant HAL.UInt8 :=
-        (case Value.Gyroscope.FSR is
-            when 250  => 0,
-            when 500  => 1,
-            when 1000 => 2,
-            when 2000 => 3);
+        (if Value.Gyroscope.Power in Off | Standby then 0
+         else
+           (case Value.Gyroscope.FSR is
+               when 250  => 0,
+               when 500  => 1,
+               when 1000 => 2,
+               when 2000 => 3));
 
       DLPF_CFG : constant HAL.UInt8 :=
-        (if Value.Low_Power then 0
-         else
-           (case Value.Gyroscope.Filter.Mode is
-              when Rate_32kHz_Bandwidth_8173Hz => 1,
-              when Rate_32kHz_Bandwidth_3281Hz => 2,
-              when Other_Rate => 0));
+        (if Value.Gyroscope.Power = Low_Noise then
+           (case Value.Gyroscope.Filter.Rate is
+               when Rate_1kHz =>
+                 (case Value.Gyroscope.Filter.Bandwidth_1kHz is
+                     when 176 => 1,
+                     when 92  => 2,
+                     when 41  => 3,
+                     when 20  => 4,
+                     when 10  => 5,
+                     when 5   => 6,
+                     when others => 0),
+               when Rate_8kHz =>
+                 (case Value.Gyroscope.Filter.Bandwidth_8kHz is
+                     when 250  => 0,
+                     when 3281 => 7,
+                     when others => 0),
+               when Rate_32kHz => 0)
+         else 0);
 
       ACCEL_FS_SEL : constant HAL.UInt8 :=
-        (case Value.Accelerometer.FSR is
-            when 2  => 0,
-            when 4  => 1,
-            when 8  => 2,
-            when 16 => 3);
+        (if Value.Accelerometer.Power = Off then 0
+         else
+           (case Value.Accelerometer.FSR is
+               when 2  => 0,
+               when 4  => 1,
+               when 8  => 2,
+               when 16 => 3));
 
       DEC2_CFG : constant HAL.UInt8 :=
-        (if Value.Low_Power then
+        (if Value.Accelerometer.Power = Low_Power then
            (case Value.Accelerometer.Average is
               when 4 => 0,
               when 8 => 1,
@@ -152,27 +166,31 @@ package body ICM20602.Internal is
          else 0);
 
       ACCEL_FCHOICE_B : constant HAL.UInt8 :=
-        (if Value.Low_Power then 0 else
-           (case Value.Accelerometer.Filter.Mode is
-               when Rate_4kHz_Bandwidth_1046Hz => 1,
-               when Rate_1kHz                  => 0));
+        (if Value.Accelerometer.Power = Low_Noise then
+           (case Value.Accelerometer.Filter.Rate is
+               when Rate_4kHz => 1,
+               when Rate_1kHz => 0)
+         else 0);
 
       A_DLPF_CFG : constant HAL.UInt8 :=
-        (if Value.Low_Power then 0 else
-           (case Value.Accelerometer.Filter.Bandwidth is
+        (if Value.Accelerometer.Power = Low_Noise
+          and then Value.Accelerometer.Filter.Rate = Rate_1kHz then
+           (case Value.Accelerometer.Filter.Bandwidth_1kHz is
                when 218 => 1,  --  0?
                when 99  => 2,
                when 45  => 3,
                when 21  => 4,
                when 10  => 5,
                when 5   => 6,
-               when 420 => 7));
+               when 420 => 7,
+               when others => 0)
+         else 0);
 
       GYRO_CYCLE : constant HAL.UInt8 :=
-        (if Value.Low_Power then 1 else 0);
+        (if Value.Gyroscope.Power = Low_Power then 1 else 0);
 
       G_AVGCFG : constant HAL.UInt8 :=
-        (if Value.Low_Power then
+        (if Value.Gyroscope.Power = Low_Power then
            (case Value.Gyroscope.Average is
               when 1   => 0,
               when 2   => 1,
@@ -184,8 +202,9 @@ package body ICM20602.Internal is
               when 128 => 7)
          else 0);
 
-      Data : constant HAL.UInt8_Array (16#1A# .. 16#1E#) :=
-        [16#1A# => DLPF_CFG,                --  CONFIG
+      Data : constant HAL.UInt8_Array (16#19# .. 16#1E#) :=
+        [16#19# => HAL.UInt8 (Value.Rate_Divider - 1),  --  SMPLRT_DIV
+         16#1A# => DLPF_CFG,                --  CONFIG
          16#1B# => FS_SEL * 8 + FCHOICE_B,  --  GYRO_CONFIG
          16#1C# => ACCEL_FS_SEL * 8,        --  ACCEL_CONFIG
          16#1D# =>                          --  ACCEL_CONFIG2
@@ -193,6 +212,28 @@ package body ICM20602.Internal is
          16#1E# => GYRO_CYCLE * 128 + G_AVGCFG * 16];  --  LP_MODE_CFG
    begin
       Write (Device, Data, Success);
+
+      if Success then
+         declare
+            CYCLE : constant HAL.UInt8 :=
+              (if Value.Accelerometer.Power = Low_Power then 1 else 0);
+            GYRO_STANDBY : constant HAL.UInt8 :=
+              (if Value.Gyroscope.Power = Standby then 1 else 0);
+            TEMP_DIS : constant HAL.UInt8 :=
+              (if Value.Gyroscope.Power = Off
+               and Value.Accelerometer.Power = Off then 1 else 0);
+            STBY_A : constant HAL.UInt8 :=
+              (if Value.Accelerometer.Power = Off then 7 else 0);
+            STBY_G : constant HAL.UInt8 :=
+              (if Value.Gyroscope.Power in Off | Standby then 7 else 0);
+         begin
+            Write
+              (Device,
+               [16#6B# => CYCLE * 32 + GYRO_STANDBY * 16 + TEMP_DIS * 8 + 1,
+                16#6C# => STBY_A * 8 + STBY_G],
+               Success);
+         end;
+      end if;
    end Configure;
 
    ----------------
@@ -214,11 +255,11 @@ package body ICM20602.Internal is
       use type HAL.UInt8;
 
       Ok   : Boolean;
-      Data : HAL.UInt8_Array (16#F3# .. 16#F3#);
+      Data : HAL.UInt8_Array (16#3A# .. 16#3A#);
    begin
       Read (Device, Data, Ok);
 
-      return Ok and (Data (Data'First) and 8) /= 0;
+      return not (Ok and (Data (Data'First) and 1) /= 0);
    end Measuring;
 
    ----------------------
@@ -240,7 +281,7 @@ package body ICM20602.Internal is
          (Cast (Shift_Left (Unsigned_16 (Data (Data'First)), 8)
             + Unsigned_16 (Data (Data'Last))));
 
-      Data : HAL.UInt8_Array (16#3A# .. 16#48#);
+      Data : HAL.UInt8_Array (16#3B# .. 16#48#);
    begin
       Read (Device, Data, Success);
 
@@ -265,15 +306,38 @@ package body ICM20602.Internal is
    is
    begin
       Write (Device, [16#6B# => 16#80#], Success);
+      --  PWR_MGMT_1: DEVICE_RESET
+
+      while Success loop
+         declare
+            use type HAL.UInt8;
+            PWR_MGMT_1 : HAL.UInt8_Array (16#6B# .. 16#6B#);
+         begin
+            Timer.Delay_Milliseconds (1);
+            Read (Device, PWR_MGMT_1, Success);
+
+            exit when (PWR_MGMT_1 (PWR_MGMT_1'First) and 16#80#) = 0;
+         end;
+      end loop;
 
       if Success then
-         Timer.Delay_Milliseconds (20);
-         Write (Device, [16#6B# => 1, 16#6C# => 0], Success);
-         --  Power On
+         Write
+           (Device,
+            [16#69# => 16#02#, 16#6A# => 5, 16#6B# => 1, 16#6C# => 0],
+            Success);
+         --  ACCEL_INTEL_CTRL/OUTPUT_LIMIT
+         --  To avoid limiting sensor output to less than 0x7FFF, set this bit
+         --  to 1. This should be done every time the ICM-20602 is powered up.
+         --
+         --  USER_CTRL: FIFO_RST, SIG_COND_RST
+         --  PWR_MGMT_1: CLKSEL=1
+         --  PWR_MGMT_2: enable all axis
       end if;
 
-      if not Success then
-         return;
+      if Success then
+         Write (Device, [16#37# => 16#10#, 16#38# => 1], Success);
+         --  INT_PIN_CFG: INT_RD_CLEAR
+         --  INT_ENABLE: DATA_RDY_INT_EN
       end if;
    end Reset;
 

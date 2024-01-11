@@ -9,15 +9,17 @@ package ICM20602 is
    pragma Preelaborate;
    pragma Discard_Names;
 
-   subtype Gyroscope_Range is Positive
-     with Static_Predicate =>
-       Gyroscope_Range in 250 | 500 | 1000 | 2000;
+   type Power_Mode is
+     (Standby,
+      Off,
+      Low_Power,
+      Low_Noise);
+
+   subtype Accelerometer_Power_Mode is Power_Mode range Off .. Low_Noise;
 
    subtype Gyroscope_Full_Scale_Range is Positive range 250 .. 2000
      with Static_Predicate =>
        Gyroscope_Full_Scale_Range in 250 | 500 | 1000 | 2000;
-
-   --  Digitally-programmable low-pass filter??? 32kHz?
 
    subtype Accelerometer_Full_Scale_Range is Positive range 2 .. 16
      with Static_Predicate =>
@@ -29,89 +31,107 @@ package ICM20602 is
 
    subtype Accelerometer_Average_Count is Average_Count range 4 .. 32;
 
-   type Gyroscope_Low_Pass_Filter_Mode is
-     (Rate_32kHz_Bandwidth_8173Hz,
-      Rate_32kHz_Bandwidth_3281Hz,
-      Other_Rate);
-   --  Gyroscope Low Pass Filter configuration mode. Bandwidth is 3dB in Hz.
+   type Sensor_Rate is (Rate_4kHz, Rate_1kHz, Rate_8kHz, Rate_32kHz);
+   pragma Ordered (Sensor_Rate);
+
+   subtype Gyroscope_Sensor_Rate is Sensor_Rate range Rate_1kHz .. Rate_32kHz;
    --  What is ODR for Rate_32kHz_x?
 
-   subtype Gyroscope_Low_Pass_Filter_Bandwidth is Positive range 5 .. 3281
-     with Static_Predicate =>
-       Gyroscope_Low_Pass_Filter_Bandwidth in
-         250 | 176 | 92 | 41 | 20 | 10 | 5 | 3281;
-   --  Gyroscope Low Pass Filter Bandwidth in Hz of rates less then 32kHz.
-   --  Rate is 1kHz if bandwidth < 250 and 8kHz otherwise.
-
-   type Gyroscope_Low_Pass_Filter_Configuration
-     (Mode : Gyroscope_Low_Pass_Filter_Mode := Other_Rate) is
-   record
-      case Mode is
-         when Other_Rate =>
-            Bandwidth : Gyroscope_Low_Pass_Filter_Bandwidth;
-         when others =>
-            null;
-      end case;
-   end record;
-
-   type Gyroscope_Configuration (Low_Power : Boolean := False) is record
-      FSR : Gyroscope_Full_Scale_Range;
-
-      case Low_Power is
-         when False =>
-            --  Low-Noise mode
-            Filter : Gyroscope_Low_Pass_Filter_Configuration;
-         when True =>
-            --  Low-Power mode
-            Average : Average_Count;
-      end case;
-   end record;
-
-   type Accelerometer_Low_Pass_Filter_Mode is
-     (Rate_4kHz_Bandwidth_1046Hz,
-      Rate_1kHz);
-   --  Accelerometer Low Pass Filter configuration mode
+   subtype Accelerometer_Sensor_Rate is
+     Sensor_Rate range Rate_4kHz .. Rate_1kHz;
    --  What is ODR for Rate_4kHz_x? I guess 4kHz.
    --  What is ODR for Rate_4kHz_x in low-power mode?
 
-   subtype Accelerometer_Low_Pass_Filter_Bandwidth is Positive range 5 .. 420
-     with Static_Predicate =>
-       Accelerometer_Low_Pass_Filter_Bandwidth in
-         218 | 99 | 45 | 21 | 10 | 5 | 420;
+   subtype Low_Pass_Filter_Bandwidth is Positive range 5 .. 8173
+     with Static_Predicate => Low_Pass_Filter_Bandwidth in
+       250 | 176 | 92 | 41 | 20 | 10 | 5 | 3281 | 8173;
+   --
+   --  Sensor Low Pass Filter Bandwidth in Hz.
 
-   type Accelerometer_Low_Pass_Filter_Configuration
-     (Mode : Accelerometer_Low_Pass_Filter_Mode := Rate_1kHz) is
+   type Gyroscope_Low_Pass_Filter_Configuration
+     (Rate : Gyroscope_Sensor_Rate := Rate_1kHz) is
    record
-      case Mode is
+      case Rate is
          when Rate_1kHz =>
-            Bandwidth : Accelerometer_Low_Pass_Filter_Bandwidth;
-         when others =>
-            null;
+            Bandwidth_1kHz : Low_Pass_Filter_Bandwidth range 5 .. 176;
+         when Rate_8kHz =>
+            Bandwidth_8kHz : Low_Pass_Filter_Bandwidth range 250 .. 3281;
+         when Rate_32kHz =>
+            Bandwidth_32kHz : Low_Pass_Filter_Bandwidth range 3281 .. 8173;
       end case;
    end record;
 
-   type Accelerometer_Configuration (Low_Power : Boolean := False) is record
-      FSR : Accelerometer_Full_Scale_Range;
+   type Gyroscope_Configuration (Power : Power_Mode := Low_Noise) is record
+      case Power is
+         when Off | Standby =>
+            null;
 
-      case Low_Power is
-         when False =>
-            --  Low-Noise mode
-            Filter : Accelerometer_Low_Pass_Filter_Configuration;
-            --  Average??? Does Average works in Low-Noise mode?
-         when True =>
-            --  Low-Power mode
-            Average : Accelerometer_Average_Count;
-            --  Does Average works in Low-Noise mode?
+         when Low_Power | Low_Noise =>
+            FSR : Gyroscope_Full_Scale_Range;
+
+            case Power is
+               when Low_Noise =>
+                  Filter : Gyroscope_Low_Pass_Filter_Configuration;
+               when Low_Power =>
+                  Average : Average_Count;
+               when others =>
+                  null;
+            end case;
+      end case;
+   end record;
+
+   subtype Accelerometer_Low_Pass_Filter_Bandwidth is Positive range 5 .. 1046
+     with Static_Predicate =>
+       Accelerometer_Low_Pass_Filter_Bandwidth in
+         218 | 99 | 45 | 21 | 10 | 5 | 420 | 1046;
+
+   type Accelerometer_Low_Pass_Filter_Configuration
+     (Rate : Accelerometer_Sensor_Rate := Rate_1kHz) is
+   record
+      case Rate is
+         when Rate_1kHz =>
+            Bandwidth_1kHz : Accelerometer_Low_Pass_Filter_Bandwidth
+              range 5 .. 420;
+         when Rate_4kHz =>
+            Bandwidth_4kHz : Accelerometer_Low_Pass_Filter_Bandwidth
+              range 1046 .. 1046;
+      end case;
+   end record;
+
+   type Accelerometer_Configuration
+     (Power : Accelerometer_Power_Mode := Low_Noise) is
+   record
+      case Power is
+         when Off =>
+            null;
+
+         when Low_Power | Low_Noise =>
+            FSR : Accelerometer_Full_Scale_Range;
+
+            case Power is
+               when Low_Noise =>
+                  Filter : Accelerometer_Low_Pass_Filter_Configuration;
+                  --  Average??? Does Average works in Low-Noise mode?
+               when Low_Power =>
+                  Average : Accelerometer_Average_Count;
+                  --  Does Average works in Low-Noise mode?
+               when Off =>
+                  null;
+            end case;
       end case;
    end record;
 
    subtype Sample_Rate_Divider is Positive range 1 .. 256;
    --  Output data rate (ODR) is 1kHz / Sample_Rate_Divider.
-   --  only effective when Gyroscope_Low_Pass_Filter_Bandwidth < 250
+   --
+   --  For Gyroscope Low_Noise mode, it only effective when Gyroscope
+   --  Low_Pass_Filter_Bandwidth < 250.
+   --  For Gyroscope Low_Power mode it should be >= 3 (max ODR = 333Hz)
+   --  For Accelerometer Low_Power mode it should be >= 2 (max ODR = 500Hz)
 
-   type Sensor_Configuration (Low_Power : Boolean := False) is record
-      Gyroscope     : Gyroscope_Configuration (Low_Power);
-      Accelerometer : Accelerometer_Configuration (Low_Power);
+   type Sensor_Configuration is record
+      Gyroscope     : Gyroscope_Configuration;
+      Accelerometer : Accelerometer_Configuration;
       Rate_Divider  : Sample_Rate_Divider := 1;
    end record;
 
