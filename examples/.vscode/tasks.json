@@ -1,0 +1,42 @@
+// SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+//
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build examples",
+            "type": "shell",
+            "command": "alr build",
+            "problemMatcher": ["$ada"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Flash ICM20602_Put with ST-Util",
+            "type": "shell",
+            "command": "alr exec -- arm-eabi-objcopy -O binary icm20602_put/.obj/main icm20602_put/.obj/main.bin && st-flash --connect-under-reset write icm20602_put/.obj/main.bin 0x08000000",
+            "problemMatcher": []
+        },
+        {
+            "label": "Flash ICM20602_Put with OpenOCD",
+            "type": "shell",
+            "command": "alr exec -- arm-eabi-objcopy -O binary icm20602_put/.obj/main icm20602_put/.obj/main.bin && openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c 'program icm20602_put/.obj/main.bin verify reset exit 0x08000000'",
+            "problemMatcher": []
+        },
+        {
+            "label": "Flash ICM20602_LCD with ST-Util",
+            "type": "shell",
+            "command": "alr exec -- arm-eabi-objcopy -O binary icm20602_lcd/.obj/main icm20602_lcd/.obj/main.bin && st-flash --connect-under-reset write icm20602_lcd/.obj/main.bin 0x08000000",
+            "problemMatcher": []
+        },
+        {
+            "label": "Flash ICM20602_LCD with OpenOCD",
+            "type": "shell",
+            "command": "alr exec -- arm-eabi-objcopy -O binary icm20602_lcd/.obj/main icm20602_lcd/.obj/main.bin && openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c 'program icm20602_lcd/.obj/main.bin verify reset exit 0x08000000'",
+            "problemMatcher": []
+        }
+    ]
+}

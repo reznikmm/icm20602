@@ -20,10 +20,10 @@ The ICM-20602 driver enables the following functionalities:
 - Detect the presence of the sensor.
 - Perform a reset operation.
 - Configure the range, the parameters of the digital filter and sampling rate
-  for each channel.
-- Adjust offsets for gyroscope and accelerometer.
-- Conduct measurements as raw 16-bit values and ~~scaled(TBD) values~~.
-- ~~Configure interrupts (TBD) and Wake-on-motion~~
+  for each channel. **It looks like low-power mode isn't working for now :-/.**
+- ~~Adjust offsets for gyroscope and accelerometer (TBD)~~.
+- Conduct measurements as raw 16-bit values and scaled values.
+- ~~Configure interrupts and Wake-on-motion (TBD)~~
 
 ## Install
 
@@ -55,10 +55,10 @@ declare
       I2C_Address => 16#76#);
 
 begin
-   ICM20602_I2C.Sensor.Initialize;
+   ICM20602_I2C.Initialize;
 
-   if ICM20602_I2C.Sensor.Check_Chip_Id then
-      ICM20602_I2C.Sensor.Reset (Ravenscar_Time.Delays, Ok);
+   if ICM20602_I2C.Check_Chip_Id then
+      ICM20602_I2C.Reset (Ravenscar_Time.Delays, Ok);
       ...
 ```
 

@@ -1,0 +1,52 @@
+// SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+//
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/icm20602_put/.obj/main",
+            "name": "Debug ICM20602_Put with OpenOCD",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "configFiles": ["interface/stlink.cfg", "target/stm32f4x.cfg"],
+            "searchDir": [],
+            "preLaunchCommands": ["monitor arm semihosting enable"],
+            "showDevDebugOutput": "none"
+        },
+        {
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/icm20602_put/.obj/main",
+            "name": "Debug ICM20602_Put with ST-Util",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "stutil",
+            "serverArgs": ["--semihosting"],
+            "showDevDebugOutput": "none"
+        },
+        {
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/icm20602_lcd/.obj/main",
+            "name": "Debug ICM20602_LCD with OpenOCD",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "configFiles": ["interface/stlink.cfg", "target/stm32f4x.cfg"],
+            "searchDir": [],
+            "preLaunchCommands": ["monitor arm semihosting enable"],
+            "showDevDebugOutput": "none"
+        },
+        {
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/icm20602_lcd/.obj/main",
+            "name": "Debug ICM20602_LCD with ST-Util",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "stutil",
+            "serverArgs": ["--semihosting"],
+            "showDevDebugOutput": "none"
+        }
+    ]
+}

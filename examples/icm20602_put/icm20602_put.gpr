@@ -1,0 +1,27 @@
+--  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+----------------------------------------------------------------
+
+with "stm32_f4ve_full.gpr";
+--  with "icm20602.gpr";
+--  Can't depend on it, because stm32_f4ve_full has a copy of HAL
+
+project ICM20602_Put is
+
+   for Runtime ("Ada") use STM32_f4VE_Full'Runtime ("Ada");
+   for Target use "arm-eabi";
+   for Main use ("main.adb");
+   for Languages use ("Ada");
+   for Source_Dirs use (".", "../../source", "../../source/impl");
+   for Object_Dir use ".obj/";
+   for Create_Missing_Dirs use "True";
+
+   package Compiler renames STM32_F4VE_Full.Compiler;
+
+   package Ide is
+      for Program_Host use "localhost:4242";
+      for Communication_Protocol use "remote";
+      for Connection_Tool use "st-util";
+   end Ide;
+end ICM20602_Put;

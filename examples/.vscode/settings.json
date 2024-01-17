@@ -1,0 +1,6 @@
+// SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+//
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+{
+    "ada.projectFile": "icm20602_put/icm20602_put.gpr"
+}

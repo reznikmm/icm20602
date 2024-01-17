@@ -20,5 +20,5 @@ jobs:
       run: alr build
     - name: Build examples
       run: |
-        echo cd examples
+        cd examples
         alr build
