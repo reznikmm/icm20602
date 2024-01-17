@@ -7,7 +7,7 @@ pragma Ada_2022;
 
 with ICM20602.Internal;
 
-package body ICM20602.I2C is
+package body ICM20602.SPI is
 
    type Chip_Settings is record
       GFSR : Gyroscope_Full_Scale_Range := 250;
@@ -62,7 +62,7 @@ package body ICM20602.I2C is
 
    procedure Initialize (Timer : not null HAL.Time.Any_Delays) is
    begin
-      Sensor.Initialize (Chip, Timer, Use_SPI => False);
+      Sensor.Initialize (Chip, Timer, Use_SPI => True);
    end Initialize;
 
    ---------------
@@ -80,19 +80,23 @@ package body ICM20602.I2C is
       Data    : out HAL.UInt8_Array;
       Success : out Boolean)
    is
-      use type HAL.I2C.I2C_Status;
-      use type HAL.UInt10;
+      use type HAL.UInt8;
+      use all type HAL.SPI.SPI_Status;
 
-      Status : HAL.I2C.I2C_Status;
+      Addr : constant HAL.UInt8 := HAL.UInt8 (Data'First) or 16#80#;
+      Status : HAL.SPI.SPI_Status;
    begin
-      I2C_Port.Mem_Read
-        (Addr          => 2 * HAL.UInt10 (I2C_Address),
-         Mem_Addr      => HAL.UInt16 (Data'First),
-         Mem_Addr_Size => HAL.I2C.Memory_Size_8b,
-         Data          => Data,
-         Status        => Status);
+      SPI.SPI_CS.Clear;
 
-      Success := Status = HAL.I2C.Ok;
+      SPI_Port.Transmit (HAL.SPI.SPI_Data_8b'(1 => Addr), Status);
+
+      if Status = Ok then
+         SPI_Port.Receive (HAL.SPI.SPI_Data_8b (Data), Status);
+      end if;
+
+      SPI.SPI_CS.Set;
+
+      Success := Status = Ok;
    end Read;
 
    ----------------------
@@ -140,26 +144,20 @@ package body ICM20602.I2C is
       Data    : HAL.UInt8_Array;
       Success : out Boolean)
    is
-      use type HAL.I2C.I2C_Status;
-      use type HAL.UInt10;
+      use type HAL.UInt8;
+      use type HAL.UInt8_Array;
+      use all type HAL.SPI.SPI_Status;
 
-      Status : HAL.I2C.I2C_Status;
+      Addr : constant HAL.UInt8 := HAL.UInt8 (Data'First) and 16#7F#;
+      Status : HAL.SPI.SPI_Status;
    begin
-      if Data'Length = 0 then
-         I2C_Port.Master_Transmit
-           (Addr          => 2 * HAL.UInt10 (I2C_Address),
-            Data          => [HAL.UInt8 (Data'First)],
-            Status        => Status);
-      else
-         I2C_Port.Mem_Write
-           (Addr          => 2 * HAL.UInt10 (I2C_Address),
-            Mem_Addr      => HAL.UInt16 (Data'First),
-            Mem_Addr_Size => HAL.I2C.Memory_Size_8b,
-            Data          => Data,
-            Status        => Status);
-      end if;
+      SPI.SPI_CS.Clear;
 
-      Success := Status = HAL.I2C.Ok;
+      SPI_Port.Transmit (HAL.SPI.SPI_Data_8b (Addr & Data), Status);
+
+      SPI.SPI_CS.Set;
+
+      Success := Status = Ok;
    end Write;
 
-end ICM20602.I2C;
+end ICM20602.SPI;

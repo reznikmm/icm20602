@@ -4,17 +4,18 @@
 ----------------------------------------------------------------
 
 --  This package offers a straightforward method for setting up the ICM-20602
---  when connected via I2C, especially useful when the use of only one sensor
+--  when connected via SPI, especially useful when the use of only one sensor
 --  is required. If you need multiple sensors, it is preferable to use the
---  ICM20602.I2C_Sensors package, which provides the appropriate tagged type.
+--  ICM20602.SPI_Sensors package, which provides the appropriate tagged type.
 
-with HAL.I2C;
+with HAL.SPI;
 with HAL.Time;
+with HAL.GPIO;
 
 generic
-   I2C_Port    : not null HAL.I2C.Any_I2C_Port;
-   I2C_Address : HAL.UInt7 := 16#68#;  --  The ICM20602 7-bit I2C address
-package ICM20602.I2C is
+   SPI_Port : not null HAL.SPI.Any_SPI_Port;
+   SPI_CS   : not null HAL.GPIO.Any_GPIO_Point;
+package ICM20602.SPI is
 
    procedure Initialize (Timer : not null HAL.Time.Any_Delays);
    --  Should be called before any other subrpogram call in this package
@@ -67,4 +68,4 @@ package ICM20602.I2C is
       Success : out Boolean);
    --  Read raw measurement values from the sensor
 
-end ICM20602.I2C;
+end ICM20602.SPI;

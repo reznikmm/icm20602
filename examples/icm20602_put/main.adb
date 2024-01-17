@@ -21,7 +21,7 @@ procedure Main is
 
    package ICM20602_I2C is new ICM20602.I2C
      (I2C_Port    => STM32.Device.I2C_1'Access,
-      I2C_Address => 16#69#);  --  icm-20602
+      I2C_Address => 16#69#);  --  ICM-20602 alternative address
 
    Ok    : Boolean := False;
    Gyro  : array (1 .. 16) of ICM20602.Angular_Speed_Vector;
@@ -39,19 +39,19 @@ begin
       SCL_AF      => STM32.Device.GPIO_AF_I2C1_4,
       Clock_Speed => 400_000);
 
-   ICM20602_I2C.Initialize;
+   ICM20602_I2C.Initialize (Ravenscar_Time.Delays);
 
-   --  Look for ICM20602 chip
+   --  Look for ICM-20602 chip
    if not ICM20602_I2C.Check_Chip_Id (16#12#) then
       Ada.Text_IO.Put_Line ("ICM20602 not found.");
       raise Program_Error;
    end if;
 
-   --  Reset ICM20602
+   --  Reset ICM-20602
    ICM20602_I2C.Reset (Ravenscar_Time.Delays, Ok);
    pragma Assert (Ok);
 
-   --  Set ICM20602 up
+   --  Set ICM-20602 up
    ICM20602_I2C.Configure
      ((Gyroscope     =>
         (Power  => ICM20602.Low_Noise,
@@ -65,6 +65,8 @@ begin
             (Rate => ICM20602.Rate_1kHz, Bandwidth_1kHz => 176)),
        Rate_Divider  => 2),  --  Divide 1kHz rate by 2, so ODR = 500Hz
       Ok);
+
+   Ravenscar_Time.Delays.Delay_Milliseconds (100);  --  Gyro start-up time
 
    loop
       Spinned := 0;

@@ -30,7 +30,10 @@ generic
 
 package ICM20602.Internal is
 
-   procedure Initialize (Device : Device_Context);
+   procedure Initialize
+     (Device  : Device_Context;
+      Timer   : not null HAL.Time.Any_Delays;
+      Use_SPI : Boolean);
    --  Should be called before any other subrpogram call in this package
 
    function Check_Chip_Id

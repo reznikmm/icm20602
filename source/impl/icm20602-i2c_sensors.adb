@@ -7,76 +7,67 @@ pragma Ada_2022;
 
 with ICM20602.Internal;
 
-package body ICM20602.I2C is
-
-   type Chip_Settings is record
-      GFSR : Gyroscope_Full_Scale_Range := 250;
-      AFSR : Accelerometer_Full_Scale_Range := 2;
-   end record;
-
-   Chip : Chip_Settings := (250, 2);
+package body ICM20602.I2C_Sensors is
 
    procedure Read
-     (Ignore  : Chip_Settings;
+     (Self    : ICM20602_I2C_Sensor'Class;
       Data    : out HAL.UInt8_Array;
       Success : out Boolean);
    --  Read registers starting from Data'First
 
    procedure Write
-     (Ignore  : Chip_Settings;
+     (Self    : ICM20602_I2C_Sensor'Class;
       Data    : HAL.UInt8_Array;
       Success : out Boolean);
    --  Write registers starting from Data'First
 
-   package Sensor is new Internal (Chip_Settings, Read, Write);
+   package Sensor is new Internal (ICM20602_I2C_Sensor'Class, Read, Write);
 
    -------------------
    -- Check_Chip_Id --
    -------------------
 
-   function Check_Chip_Id (Expect : HAL.UInt8 := 16#12#) return Boolean is
-     (Sensor.Check_Chip_Id (Chip, Expect));
+   overriding function Check_Chip_Id
+     (Self   : ICM20602_I2C_Sensor;
+      Expect : HAL.UInt8 := 16#12#) return Boolean is
+        (Sensor.Check_Chip_Id (Self, Expect));
 
    ---------------
    -- Configure --
    ---------------
 
-   procedure Configure
-     (Value   : Sensor_Configuration;
+   overriding procedure Configure
+     (Self    : in out ICM20602_I2C_Sensor;
+      Value   : Sensor_Configuration;
       Success : out Boolean) is
    begin
-      Chip :=
-        (GFSR =>
-           (if Value.Gyroscope.Power in Low_Noise | Low_Power
-            then Value.Gyroscope.FSR else 250),
-         AFSR =>
-           (if Value.Accelerometer.Power in Low_Noise | Low_Power
-            then Value.Accelerometer.FSR else 2));
-
-      Sensor.Configure (Chip, Value, Success);
+      Sensor.Configure (Self, Value, Success);
    end Configure;
 
    ----------------
    -- Initialize --
    ----------------
 
-   procedure Initialize (Timer : not null HAL.Time.Any_Delays) is
+   overriding procedure Initialize
+     (Self  : ICM20602_I2C_Sensor;
+      Timer : not null HAL.Time.Any_Delays) is
    begin
-      Sensor.Initialize (Chip, Timer, Use_SPI => False);
+      Sensor.Initialize (Self, Timer, Use_SPI => False);
    end Initialize;
 
    ---------------
    -- Measuring --
    ---------------
 
-   function Measuring return Boolean is (Sensor.Measuring (Chip));
+   overriding function Measuring (Self : ICM20602_I2C_Sensor) return Boolean is
+     (Sensor.Measuring (Self));
 
    ----------
    -- Read --
    ----------
 
    procedure Read
-     (Ignore  : Chip_Settings;
+     (Self    : ICM20602_I2C_Sensor'Class;
       Data    : out HAL.UInt8_Array;
       Success : out Boolean)
    is
@@ -85,8 +76,8 @@ package body ICM20602.I2C is
 
       Status : HAL.I2C.I2C_Status;
    begin
-      I2C_Port.Mem_Read
-        (Addr          => 2 * HAL.UInt10 (I2C_Address),
+      Self.I2C_Port.Mem_Read
+        (Addr          => 2 * HAL.UInt10 (Self.I2C_Address),
          Mem_Addr      => HAL.UInt16 (Data'First),
          Mem_Addr_Size => HAL.I2C.Memory_Size_8b,
          Data          => Data,
@@ -99,36 +90,44 @@ package body ICM20602.I2C is
    -- Read_Measurement --
    ----------------------
 
-   procedure Read_Measurement
-     (Gyro    : out Angular_Speed_Vector;
+   overriding procedure Read_Measurement
+     (Self    : ICM20602_I2C_Sensor;
+      Gyro    : out Angular_Speed_Vector;
       Accel   : out Acceleration_Vector;
       Success : out Boolean) is
    begin
       Sensor.Read_Measurement
-        (Chip, Chip.GFSR, Chip.AFSR, Gyro, Accel, Success);
+        (Self,
+         GFSR    => Self.GFSR,
+         AFSR    => Self.AFSR,
+         Gyro    => Gyro,
+         Accel   => Accel,
+         Success => Success);
    end Read_Measurement;
 
    --------------------------
    -- Read_Raw_Measurement --
    --------------------------
 
-   procedure Read_Raw_Measurement
-     (Gyro    : out Raw_Vector;
+   overriding procedure Read_Raw_Measurement
+     (Self    : ICM20602_I2C_Sensor;
+      Gyro    : out Raw_Vector;
       Accel   : out Raw_Vector;
       Success : out Boolean) is
    begin
-      Sensor.Read_Raw_Measurement (Chip, Gyro, Accel, Success);
+      Sensor.Read_Raw_Measurement (Self, Gyro, Accel, Success);
    end Read_Raw_Measurement;
 
    -----------
    -- Reset --
    -----------
 
-   procedure Reset
-     (Timer   : not null HAL.Time.Any_Delays;
+   overriding procedure Reset
+     (Self    : ICM20602_I2C_Sensor;
+      Timer   : not null HAL.Time.Any_Delays;
       Success : out Boolean) is
    begin
-      Sensor.Reset (Chip, Timer, Success);
+      Sensor.Reset (Self, Timer, Success);
    end Reset;
 
    -----------
@@ -136,7 +135,7 @@ package body ICM20602.I2C is
    -----------
 
    procedure Write
-     (Ignore  : Chip_Settings;
+     (Self    : ICM20602_I2C_Sensor'Class;
       Data    : HAL.UInt8_Array;
       Success : out Boolean)
    is
@@ -146,13 +145,13 @@ package body ICM20602.I2C is
       Status : HAL.I2C.I2C_Status;
    begin
       if Data'Length = 0 then
-         I2C_Port.Master_Transmit
-           (Addr          => 2 * HAL.UInt10 (I2C_Address),
+         Self.I2C_Port.Master_Transmit
+           (Addr          => 2 * HAL.UInt10 (Self.I2C_Address),
             Data          => [HAL.UInt8 (Data'First)],
             Status        => Status);
       else
-         I2C_Port.Mem_Write
-           (Addr          => 2 * HAL.UInt10 (I2C_Address),
+         Self.I2C_Port.Mem_Write
+           (Addr          => 2 * HAL.UInt10 (Self.I2C_Address),
             Mem_Addr      => HAL.UInt16 (Data'First),
             Mem_Addr_Size => HAL.I2C.Memory_Size_8b,
             Data          => Data,
@@ -162,4 +161,4 @@ package body ICM20602.I2C is
       Success := Status = HAL.I2C.Ok;
    end Write;
 
-end ICM20602.I2C;
+end ICM20602.I2C_Sensors;

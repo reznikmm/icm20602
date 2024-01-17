@@ -240,11 +240,23 @@ package body ICM20602.Internal is
    -- Initialize --
    ----------------
 
-   procedure Initialize (Device : Device_Context) is
+   procedure Initialize
+     (Device  : Device_Context;
+      Timer   : not null HAL.Time.Any_Delays;
+      Use_SPI : Boolean)
+   is
       Aux : constant HAL.UInt8_Array (16#75# .. 16#74#) := [];
+      Dis : constant HAL.UInt8_Array (16#70# .. 16#70#) := [64];
       Ignore : Boolean;
    begin
-      Write (Device, Aux, Ignore);
+      Timer.Delay_Milliseconds (2);
+      --  Start-up time for register read/write (From power-up) 2ms max.
+
+      if Use_SPI then
+         Write (Device, Dis, Ignore);  --  I2C_IF:I2C_IF_DIS
+      else
+         Write (Device, Aux, Ignore);  --  Dirty hack to make my board work
+      end if;
    end Initialize;
 
    ---------------

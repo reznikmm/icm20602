@@ -3,33 +3,32 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
---  This package offers a straightforward method for setting up the ICM-20602
---  when connected via I2C, especially useful when the use of only one sensor
---  is required. If you need multiple sensors, it is preferable to use the
---  ICM20602.I2C_Sensors package, which provides the appropriate tagged type.
-
-with HAL.I2C;
 with HAL.Time;
 
-generic
-   I2C_Port    : not null HAL.I2C.Any_I2C_Port;
-   I2C_Address : HAL.UInt7 := 16#68#;  --  The ICM20602 7-bit I2C address
-package ICM20602.I2C is
+package ICM20602.Sensors is
 
-   procedure Initialize (Timer : not null HAL.Time.Any_Delays);
+   type Sensor is limited interface;
+
+   procedure Initialize
+     (Self  : Sensor;
+      Timer : not null HAL.Time.Any_Delays) is abstract;
    --  Should be called before any other subrpogram call in this package
 
-   function Check_Chip_Id (Expect : HAL.UInt8 := 16#12#) return Boolean;
+   function Check_Chip_Id
+     (Self   : Sensor;
+      Expect : HAL.UInt8 := 16#12#) return Boolean is abstract;
    --  Read the chip ID and check that it matches
 
    procedure Reset
-     (Timer   : not null HAL.Time.Any_Delays;
-      Success : out Boolean);
+     (Self    : Sensor;
+      Timer   : not null HAL.Time.Any_Delays;
+      Success : out Boolean) is abstract;
    --  Issue a soft reset and wait until the chip is ready.
 
    procedure Configure
-     (Value   : Sensor_Configuration;
-      Success : out Boolean);
+     (Self    : in out Sensor;
+      Value   : Sensor_Configuration;
+      Success : out Boolean) is abstract;
    --  Setup sensor configuration, including
    --  * power mode
    --  * full scale rate
@@ -38,7 +37,7 @@ package ICM20602.I2C is
    --
    --  Configuration example:
    --
-   --  Configure
+   --  Sensor.Configure
    --    ((Gyroscope     =>
    --       (Power  => ICM20602.Low_Noise,
    --        FSR    => 250,  --  full scale range => -250 .. +250 dps
@@ -52,19 +51,21 @@ package ICM20602.I2C is
    --      Rate_Divider  => 2),  --  Divide 1kHz rate by 2, so ODR = 500Hz
    --     Ok);
 
-   function Measuring return Boolean;
+   function Measuring (Self : Sensor) return Boolean is abstract;
    --  Check if a measurement is in progress
 
    procedure Read_Measurement
-     (Gyro    : out Angular_Speed_Vector;
+     (Self    : Sensor;
+      Gyro    : out Angular_Speed_Vector;
       Accel   : out Acceleration_Vector;
-      Success : out Boolean);
+      Success : out Boolean) is abstract;
    --  Read scaled measurement values from the sensor
 
    procedure Read_Raw_Measurement
-     (Gyro    : out Raw_Vector;
+     (Self    : Sensor;
+      Gyro    : out Raw_Vector;
       Accel   : out Raw_Vector;
-      Success : out Boolean);
+      Success : out Boolean) is abstract;
    --  Read raw measurement values from the sensor
 
-end ICM20602.I2C;
+end ICM20602.Sensors;
