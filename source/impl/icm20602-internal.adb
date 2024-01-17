@@ -145,7 +145,7 @@ package body ICM20602.Internal is
                      when 3281 => 7,
                      when others => 0),
                when Rate_32kHz => 0)
-         else 0);
+         else 1);
 
       ACCEL_FS_SEL : constant HAL.UInt8 :=
         (if Value.Accelerometer.Power = Off then 0
@@ -268,6 +268,77 @@ package body ICM20602.Internal is
 
    procedure Read_Measurement
      (Device  : Device_Context;
+      GFSR    : Gyroscope_Full_Scale_Range;
+      AFSR    : Accelerometer_Full_Scale_Range;
+      Gyro    : out Angular_Speed_Vector;
+      Accel   : out Acceleration_Vector;
+      Success : out Boolean)
+   is
+      subtype Int is Integer range -2**15 .. 2**15 - 1;
+      Raw_A : Raw_Vector;
+      Raw_G : Raw_Vector;
+   begin
+      Read_Raw_Measurement
+        (Device, Gyro => Raw_G, Accel => Raw_A, Success => Success);
+
+      if Success then
+         case GFSR is
+            when 250 =>
+               Gyro :=
+                 (X => Int (Raw_G.X) * Scaled_Angular_Speed'Small,
+                  Y => Int (Raw_G.Y) * Scaled_Angular_Speed'Small,
+                  Z => Int (Raw_G.Z) * Scaled_Angular_Speed'Small);
+            when 500  =>
+               Gyro :=
+                 (X => 2 * Int (Raw_G.X) * Scaled_Angular_Speed'Small,
+                  Y => 2 * Int (Raw_G.Y) * Scaled_Angular_Speed'Small,
+                  Z => 2 * Int (Raw_G.Z) * Scaled_Angular_Speed'Small);
+            when 1000  =>
+               Gyro :=
+                 (X => 4 * Int (Raw_G.X) * Scaled_Angular_Speed'Small,
+                  Y => 4 * Int (Raw_G.Y) * Scaled_Angular_Speed'Small,
+                  Z => 4 * Int (Raw_G.Z) * Scaled_Angular_Speed'Small);
+            when 2000 =>
+               Gyro :=
+                 (X => 8 * Int (Raw_G.X) * Scaled_Angular_Speed'Small,
+                  Y => 8 * Int (Raw_G.Y) * Scaled_Angular_Speed'Small,
+                  Z => 8 * Int (Raw_G.Z) * Scaled_Angular_Speed'Small);
+         end case;
+
+         case AFSR is
+            when 2 =>
+               Accel :=
+                 (X => Int (Raw_A.X) * Acceleration'Small,
+                  Y => Int (Raw_A.Y) * Acceleration'Small,
+                  Z => Int (Raw_A.Z) * Acceleration'Small);
+            when 4  =>
+               Accel :=
+                 (X => 2 * Int (Raw_A.X) * Acceleration'Small,
+                  Y => 2 * Int (Raw_A.Y) * Acceleration'Small,
+                  Z => 2 * Int (Raw_A.Z) * Acceleration'Small);
+            when 8  =>
+               Accel :=
+                 (X => 4 * Int (Raw_A.X) * Acceleration'Small,
+                  Y => 4 * Int (Raw_A.Y) * Acceleration'Small,
+                  Z => 4 * Int (Raw_A.Z) * Acceleration'Small);
+            when 16 =>
+               Accel :=
+                 (X => 8 * Int (Raw_A.X) * Acceleration'Small,
+                  Y => 8 * Int (Raw_A.Y) * Acceleration'Small,
+                  Z => 8 * Int (Raw_A.Z) * Acceleration'Small);
+         end case;
+      else
+         Gyro := (others => 0.0);
+         Accel := (others => 0.0);
+      end if;
+   end Read_Measurement;
+
+   ----------------------
+   -- Read_Measurement --
+   ----------------------
+
+   procedure Read_Raw_Measurement
+     (Device  : Device_Context;
       Gyro    : out Raw_Vector;
       Accel   : out Raw_Vector;
       Success : out Boolean)
@@ -293,7 +364,7 @@ package body ICM20602.Internal is
          Gyro.Y := Decode (Data (16#45# .. 16#46#));
          Gyro.Z := Decode (Data (16#47# .. 16#48#));
       end if;
-   end Read_Measurement;
+   end Read_Raw_Measurement;
 
    -----------
    -- Reset --

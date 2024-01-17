@@ -74,6 +74,15 @@ package ICM20602.Internal is
 
    procedure Read_Measurement
      (Device  : Device_Context;
+      GFSR    : Gyroscope_Full_Scale_Range;
+      AFSR    : Accelerometer_Full_Scale_Range;
+      Gyro    : out Angular_Speed_Vector;
+      Accel   : out Acceleration_Vector;
+      Success : out Boolean);
+   --  Read scaled measurement values from the sensor
+
+   procedure Read_Raw_Measurement
+     (Device  : Device_Context;
       Gyro    : out Raw_Vector;
       Accel   : out Raw_Vector;
       Success : out Boolean);

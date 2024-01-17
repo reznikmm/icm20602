@@ -138,5 +138,27 @@ package ICM20602 is
    type Raw_Vector is record
       X, Y, Z : Interfaces.Integer_16;
    end record;
+   --  A value read from the sensor in raw format
+
+   type Scaled_Angular_Speed is delta 1.0 / 2.0 ** 17
+     range -1.0 .. 1.0 - 1.0 / 2.0 ** 17;
+   --  The angular speed value is scaled such that 1.0 corresponds to 2000
+   --  degrees per second.
+
+   type Angular_Speed_Vector is record
+      X, Y, Z : Scaled_Angular_Speed;
+   end record;
+   --  Angular velocity values for each axis. X, Y and Z also known as
+   --  Roll, Peach and Yaw angles.
+
+   type Acceleration is  delta 1.0 / 2.0 ** 14
+     range -16.0 .. 16.0 - 1.0 / 2.0 ** 14;
+   --  The linear acceleration value is scaled such that 1.0 corresponds to
+   --  1 G (9.8 m/s2).
+
+   type Acceleration_Vector is record
+      X, Y, Z : Acceleration;
+   end record;
+   --  Linear acceleration values for each axis
 
 end ICM20602;
