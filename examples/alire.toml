@@ -11,7 +11,7 @@ maintainers = ["Max Reznik <reznikmm@gmail.com>"]
 maintainers-logins = ["reznikmm"]
 licenses = "Apache-2.0 WITH LLVM-exception"
 website = "https://github.com/reznikmm/icm20602"
-project-files = ["icm20602_put/icm20602_put.gpr"]
+project-files = ["icm20602_put/icm20602_put.gpr", "icm20602_lcd/icm20602_lcd.gpr"]
 
 [configuration]
 generate_ada = false

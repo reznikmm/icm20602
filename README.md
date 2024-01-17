@@ -55,7 +55,7 @@ declare
       I2C_Address => 16#76#);
 
 begin
-   ICM20602_I2C.Initialize;
+   ICM20602_I2C.Initialize (Ravenscar_Time.Delays);
 
    if ICM20602_I2C.Check_Chip_Id then
       ICM20602_I2C.Reset (Ravenscar_Time.Delays, Ok);
@@ -71,7 +71,7 @@ declare
       I2C_Address => 16#76#,
       Calibration => <>);
 begin
-   Sensor.Initialize;
+   Sensor.Initialize (Ravenscar_Time.Delays);
 
    if Sensor.Check_Chip_Id then
       Sensor.Reset (Ravenscar_Time.Delays, Ok);
@@ -102,3 +102,5 @@ to launch pre-configured debugger targets.
 
 - [Simple example for STM32 F4VE board](examples/icm20602_put) - complete
   example for the generic instantiation.
+- [Advanced example for STM32 F4VE board and LCD & touch panel](examples/icm20602_lcd) -
+  complete example of the tagged type usage.
