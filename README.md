@@ -52,7 +52,7 @@ Generic instantiation looks like this:
 declare
    package ICM20602_I2C is new ICM20602.I2C
      (I2C_Port    => STM32.Device.I2C_1'Access,
-      I2C_Address => 16#76#);
+      I2C_Address => 16#69#);
 
 begin
    ICM20602_I2C.Initialize (Ravenscar_Time.Delays);
@@ -68,8 +68,7 @@ While declaring object of the tagged type looks like this:
 declare
    Sensor : ICM20602.I2C_Sensors.ICM20602_I2C_Sensor :=
      (I2C_Port    => STM32.Device.I2C_1'Access,
-      I2C_Address => 16#76#,
-      Calibration => <>);
+      I2C_Address => 16#69#);
 begin
    Sensor.Initialize (Ravenscar_Time.Delays);
 

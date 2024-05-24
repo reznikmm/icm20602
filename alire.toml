@@ -21,5 +21,5 @@ development.style_checks = ["-gnaty"]
 development.contracts = "Yes"
 
 [[depends-on]]
-hal = "~0.3.0"
+hal = "~0.4.0"
 gnat = ">=11 & <2000" # Uses Ada 2022 syntax

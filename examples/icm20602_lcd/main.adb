@@ -452,6 +452,7 @@ begin
 
             if Update then
                Configure_Sensor;
+               Update := False;
             elsif STM32.User_Button.Has_Been_Pressed then
                GUI.Dump_Screen (LCD.all);
             end if;
