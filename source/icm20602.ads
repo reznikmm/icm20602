@@ -161,4 +161,7 @@ package ICM20602 is
    end record;
    --  Linear acceleration values for each axis
 
+   Chip_Id : constant := 16#12#;
+   --  Expected value for WHO_AM_I register
+
 end ICM20602;
