@@ -3,14 +3,12 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
-with HAL.Time;
-
 generic
    type Device_Context (<>) is limited private;
 
    with procedure Read
      (Device  : Device_Context;
-      Data    : out HAL.UInt8_Array;
+      Data    : out Byte_Array;
       Success : out Boolean);
    --  Read the values from the ICM-20602 chip registers into Data.
    --  Each element in the Data corresponds to a specific register address
@@ -20,7 +18,7 @@ generic
 
    with procedure Write
      (Device  : Device_Context;
-      Data    : HAL.UInt8_Array;
+      Data    : Byte_Array;
       Success : out Boolean);
    --  Write the Data values to the ICM-20602 chip registers.
    --  Each element in the Data corresponds to a specific register address
@@ -32,13 +30,12 @@ package ICM20602.Internal is
 
    procedure Initialize
      (Device  : Device_Context;
-      Timer   : not null HAL.Time.Any_Delays;
       Use_SPI : Boolean);
    --  Should be called before any other subrpogram call in this package
 
    function Check_Chip_Id
      (Device : Device_Context;
-      Expect : HAL.UInt8) return Boolean;
+      Expect : Byte) return Boolean;
    --  Read the chip ID and check that it matches
 
    procedure Set_Gyroscope_Offset
@@ -67,9 +64,9 @@ package ICM20602.Internal is
       Success : out Boolean);
 
    procedure Reset
-     (Device  : Device_Context;
-      Timer   : not null HAL.Time.Any_Delays;
-      Success : out Boolean);
+     (Device    : Device_Context;
+      Delay_1ms : not null access procedure;
+      Success   : out Boolean);
    --  Issue a soft reset and wait until the chip is ready.
 
    function Measuring (Device  : Device_Context) return Boolean;

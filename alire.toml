@@ -1,6 +1,6 @@
 name = "icm20602"
 description = "Driver for ICM-20602 Gyroscope and Accelerometer sensor"
-version = "1.0.0"
+version = "1.1.0"
 
 authors = ["Max Reznik"]
 maintainers = ["Max Reznik <reznikmm@gmail.com>"]
@@ -21,5 +21,5 @@ development.style_checks = ["-gnaty"]
 development.contracts = "Yes"
 
 [[depends-on]]
-hal = "~0.3"
+hal = "~0.3 | ^1"
 gnat = ">=11 & <2000" # Uses Ada 2022 syntax

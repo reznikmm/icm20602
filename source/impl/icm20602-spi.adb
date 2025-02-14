@@ -18,13 +18,13 @@ package body ICM20602.SPI is
 
    procedure Read
      (Ignore  : Chip_Settings;
-      Data    : out HAL.UInt8_Array;
+      Data    : out Byte_Array;
       Success : out Boolean);
    --  Read registers starting from Data'First
 
    procedure Write
      (Ignore  : Chip_Settings;
-      Data    : HAL.UInt8_Array;
+      Data    : Byte_Array;
       Success : out Boolean);
    --  Write registers starting from Data'First
 
@@ -34,7 +34,7 @@ package body ICM20602.SPI is
    -- Check_Chip_Id --
    -------------------
 
-   function Check_Chip_Id (Expect : HAL.UInt8 := 16#12#) return Boolean is
+   function Check_Chip_Id (Expect : Byte := Chip_Id) return Boolean is
      (Sensor.Check_Chip_Id (Chip, Expect));
 
    ---------------
@@ -62,7 +62,8 @@ package body ICM20602.SPI is
 
    procedure Initialize (Timer : not null HAL.Time.Any_Delays) is
    begin
-      Sensor.Initialize (Chip, Timer, Use_SPI => True);
+      Timer.Delay_Milliseconds (2);
+      Sensor.Initialize (Chip, Use_SPI => True);
    end Initialize;
 
    ---------------
@@ -77,21 +78,23 @@ package body ICM20602.SPI is
 
    procedure Read
      (Ignore  : Chip_Settings;
-      Data    : out HAL.UInt8_Array;
+      Data    : out Byte_Array;
       Success : out Boolean)
    is
       use type HAL.UInt8;
       use all type HAL.SPI.SPI_Status;
 
-      Addr : constant HAL.UInt8 := HAL.UInt8 (Data'First) or 16#80#;
+      Addr   : constant HAL.UInt8 := HAL.UInt8 (Data'First) or 16#80#;
       Status : HAL.SPI.SPI_Status;
+      Bytes  : HAL.SPI.SPI_Data_8b (1 .. Data'Length)
+        with Import, Address => Data'Address;
    begin
       SPI.SPI_CS.Clear;
 
       SPI_Port.Transmit (HAL.SPI.SPI_Data_8b'(1 => Addr), Status);
 
       if Status = Ok then
-         SPI_Port.Receive (HAL.SPI.SPI_Data_8b (Data), Status);
+         SPI_Port.Receive (Bytes, Status);
       end if;
 
       SPI.SPI_CS.Set;
@@ -130,9 +133,16 @@ package body ICM20602.SPI is
 
    procedure Reset
      (Timer   : not null HAL.Time.Any_Delays;
-      Success : out Boolean) is
+      Success : out Boolean)
+   is
+      procedure Sleep_1ms;
+
+      procedure Sleep_1ms is
+      begin
+         Timer.Delay_Milliseconds (1);
+      end Sleep_1ms;
    begin
-      Sensor.Reset (Chip, Timer, Success);
+      Sensor.Reset (Chip, Sleep_1ms'Access, Success);
    end Reset;
 
    -----------
@@ -141,19 +151,21 @@ package body ICM20602.SPI is
 
    procedure Write
      (Ignore  : Chip_Settings;
-      Data    : HAL.UInt8_Array;
+      Data    : Byte_Array;
       Success : out Boolean)
    is
       use type HAL.UInt8;
-      use type HAL.UInt8_Array;
+      use type HAL.SPI.SPI_Data_8b;
       use all type HAL.SPI.SPI_Status;
 
-      Addr : constant HAL.UInt8 := HAL.UInt8 (Data'First) and 16#7F#;
+      Addr   : constant HAL.UInt8 := HAL.UInt8 (Data'First) and 16#7F#;
       Status : HAL.SPI.SPI_Status;
+      Bytes  : HAL.SPI.SPI_Data_8b (1 .. Data'Length)
+        with Import, Address => Data'Address;
    begin
       SPI.SPI_CS.Clear;
 
-      SPI_Port.Transmit (HAL.SPI.SPI_Data_8b (Addr & Data), Status);
+      SPI_Port.Transmit (HAL.SPI.SPI_Data_8b'(Addr & Bytes), Status);
 
       SPI.SPI_CS.Set;
 

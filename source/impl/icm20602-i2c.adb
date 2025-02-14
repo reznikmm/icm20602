@@ -5,6 +5,8 @@
 
 pragma Ada_2022;
 
+with HAL;
+
 with ICM20602.Internal;
 
 package body ICM20602.I2C is
@@ -18,13 +20,13 @@ package body ICM20602.I2C is
 
    procedure Read
      (Ignore  : Chip_Settings;
-      Data    : out HAL.UInt8_Array;
+      Data    : out Byte_Array;
       Success : out Boolean);
    --  Read registers starting from Data'First
 
    procedure Write
      (Ignore  : Chip_Settings;
-      Data    : HAL.UInt8_Array;
+      Data    : Byte_Array;
       Success : out Boolean);
    --  Write registers starting from Data'First
 
@@ -34,7 +36,7 @@ package body ICM20602.I2C is
    -- Check_Chip_Id --
    -------------------
 
-   function Check_Chip_Id (Expect : HAL.UInt8 := 16#12#) return Boolean is
+   function Check_Chip_Id (Expect : Byte := Chip_Id) return Boolean is
      (Sensor.Check_Chip_Id (Chip, Expect));
 
    ---------------
@@ -62,7 +64,9 @@ package body ICM20602.I2C is
 
    procedure Initialize (Timer : not null HAL.Time.Any_Delays) is
    begin
-      Sensor.Initialize (Chip, Timer, Use_SPI => False);
+      Timer.Delay_Milliseconds (2);
+      --  Start-up time for register read/write (From power-up) 2ms max.
+      Sensor.Initialize (Chip, Use_SPI => False);
    end Initialize;
 
    ---------------
@@ -77,19 +81,21 @@ package body ICM20602.I2C is
 
    procedure Read
      (Ignore  : Chip_Settings;
-      Data    : out HAL.UInt8_Array;
+      Data    : out Byte_Array;
       Success : out Boolean)
    is
       use type HAL.I2C.I2C_Status;
       use type HAL.UInt10;
 
       Status : HAL.I2C.I2C_Status;
+      Bytes  : HAL.I2C.I2C_Data (1 .. Data'Length)
+        with Import, Address => Data'Address;
    begin
       I2C_Port.Mem_Read
         (Addr          => 2 * HAL.UInt10 (I2C_Address),
          Mem_Addr      => HAL.UInt16 (Data'First),
          Mem_Addr_Size => HAL.I2C.Memory_Size_8b,
-         Data          => Data,
+         Data          => Bytes,
          Status        => Status);
 
       Success := Status = HAL.I2C.Ok;
@@ -126,9 +132,16 @@ package body ICM20602.I2C is
 
    procedure Reset
      (Timer   : not null HAL.Time.Any_Delays;
-      Success : out Boolean) is
+      Success : out Boolean)
+   is
+      procedure Sleep_1ms;
+
+      procedure Sleep_1ms is
+      begin
+         Timer.Delay_Milliseconds (1);
+      end Sleep_1ms;
    begin
-      Sensor.Reset (Chip, Timer, Success);
+      Sensor.Reset (Chip, Sleep_1ms'Access, Success);
    end Reset;
 
    -----------
@@ -137,27 +150,22 @@ package body ICM20602.I2C is
 
    procedure Write
      (Ignore  : Chip_Settings;
-      Data    : HAL.UInt8_Array;
+      Data    : Byte_Array;
       Success : out Boolean)
    is
       use type HAL.I2C.I2C_Status;
       use type HAL.UInt10;
 
       Status : HAL.I2C.I2C_Status;
+      Bytes  : HAL.I2C.I2C_Data (1 .. Data'Length)
+        with Import, Address => Data'Address;
    begin
-      if Data'Length = 0 then
-         I2C_Port.Master_Transmit
-           (Addr          => 2 * HAL.UInt10 (I2C_Address),
-            Data          => [HAL.UInt8 (Data'First)],
-            Status        => Status);
-      else
-         I2C_Port.Mem_Write
-           (Addr          => 2 * HAL.UInt10 (I2C_Address),
-            Mem_Addr      => HAL.UInt16 (Data'First),
-            Mem_Addr_Size => HAL.I2C.Memory_Size_8b,
-            Data          => Data,
-            Status        => Status);
-      end if;
+      I2C_Port.Mem_Write
+        (Addr          => 2 * HAL.UInt10 (I2C_Address),
+         Mem_Addr      => HAL.UInt16 (Data'First),
+         Mem_Addr_Size => HAL.I2C.Memory_Size_8b,
+         Data          => Bytes,
+         Status        => Status);
 
       Success := Status = HAL.I2C.Ok;
    end Write;

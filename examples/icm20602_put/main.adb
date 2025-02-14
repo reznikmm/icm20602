@@ -8,6 +8,7 @@ pragma Ada_2022;
 with Ada.Real_Time;
 with Ada.Text_IO;
 
+with HAL.I2C;
 with Ravenscar_Time;
 
 with STM32.Board;
@@ -38,6 +39,19 @@ begin
       SDA_AF      => STM32.Device.GPIO_AF_I2C1_4,
       SCL_AF      => STM32.Device.GPIO_AF_I2C1_4,
       Clock_Speed => 400_000);
+
+   --  In my configuration of icm-20602 with stm32f407, I cannot get
+   --  HAL.I2C.Read_Mem to work correctly until I make an artificial call
+   --  to HAL.I2C.Master_Transmit.
+   declare
+      Addr   : constant := 2 * 16#69#;
+      Ignore : HAL.I2C.I2C_Status;
+   begin
+      STM32.Device.I2C_1.Master_Transmit
+        (Addr   => Addr,
+         Data   => [0],
+         Status => Ignore);
+   end;
 
    ICM20602_I2C.Initialize (Ravenscar_Time.Delays);
 
