@@ -16,7 +16,7 @@ package ICM20602.Sensors is
 
    function Check_Chip_Id
      (Self   : Sensor;
-      Expect : HAL.UInt8 := 16#12#) return Boolean is abstract;
+      Expect : Byte := Chip_Id) return Boolean is abstract;
    --  Read the chip ID and check that it matches
 
    procedure Reset

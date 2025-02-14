@@ -164,4 +164,13 @@ package ICM20602 is
    Chip_Id : constant := 16#12#;
    --  Expected value for WHO_AM_I register
 
+   subtype Register_Address is Natural range 16#00# .. 16#FF#;
+   --  Sensor's register address
+
+   subtype Byte is Interfaces.Unsigned_8;  --  Register value
+
+   type Byte_Array is array (Register_Address range <>) of Byte;
+   --  Bytes to be exchanged with registers. Index is a register address, while
+   --  elements are corresponding register values.
+
 end ICM20602;

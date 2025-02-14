@@ -20,7 +20,7 @@ package ICM20602.SPI is
    procedure Initialize (Timer : not null HAL.Time.Any_Delays);
    --  Should be called before any other subrpogram call in this package
 
-   function Check_Chip_Id (Expect : HAL.UInt8 := 16#12#) return Boolean;
+   function Check_Chip_Id (Expect : Byte := Chip_Id) return Boolean;
    --  Read the chip ID and check that it matches
 
    procedure Reset
