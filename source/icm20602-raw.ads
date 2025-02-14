@@ -26,45 +26,6 @@ package ICM20602.Raw is
    use type Interfaces.Integer_16;
    use type Interfaces.Unsigned_8;
 
-   type Register_Address is range 16#04# .. 16#7E#;
-   --  Sensor's register address
-
-   subtype Byte is Interfaces.Unsigned_8;  --  Register value
-
-   type Byte_Array is array (Register_Address range <>) of Byte;
-   --  Bytes to be exchanged with registers. Index is a register address, while
-   --  elements are corresponding register values.
-
-   function "+" (X : Register_Address) return Byte is (Byte (X));
-   --  Easy conversion function from register address to a byte
-
-   function SPI_Write (X : Register_Address) return Byte renames "+";
-   --  For read operation on the SPI bus the register address is passed with
-   --  the highest bit off (0).
-
-   function SPI_Read (X : Register_Address) return Byte is (Byte (X) + 16#80#);
-   --  For write operation on the SPI bus the register address is passed with
-   --  the highest bit on (1).
-
-   function SPI_Write (X : Byte_Array) return Byte_Array is
-     ((X'First - 1 => SPI_Write (X'First)) & X);
-   --  Prefix the byte array with the register address for the SPI write
-   --  operation
-
-   function SPI_Read (X : Byte_Array) return Byte_Array is
-     ((X'First - 1 => SPI_Read (X'First)) & X);
-   --  Prefix the byte array with the register address for the SPI read
-   --  operation
-
-   function I2C_Write (X : Byte_Array) return Byte_Array is
-     ((X'First - 1 => +X'First) & X);
-   --  Prefix the byte array with the register address for the I2C write
-   --  operation
-
-   function I2C_Read (X : Byte_Array) return Byte_Array renames I2C_Write;
-   --  Prefix the byte array with the register address for the I2C read
-   --  operation
-
    subtype Chip_Id_Data is Byte_Array (16#75# .. 16#75#);
    --  WHO AM I register
 
@@ -134,7 +95,11 @@ package ICM20602.Raw is
    procedure Get_Raw_Measurement
      (Raw   : Byte_Array;
       Gyro  : out Raw_Vector;
-      Accel : out Raw_Vector);
+      Accel : out Raw_Vector)
+     with Pre =>
+       Raw'First in Measurement_Data'Range
+         and then Raw'Last in Measurement_Data'Range;
+   --
    --  Decode raw measurement. Raw data should contain Measurement_Data'Range
    --  items.
 
@@ -143,7 +108,11 @@ package ICM20602.Raw is
       GFSR  : Gyroscope_Full_Scale_Range;
       AFSR  : Accelerometer_Full_Scale_Range;
       Gyro  : out Angular_Speed_Vector;
-      Accel : out Acceleration_Vector);
+      Accel : out Acceleration_Vector)
+     with Pre =>
+       Raw'First in Measurement_Data'Range
+         and then Raw'Last in Measurement_Data'Range;
+   --
    --  Decode measurement according to scale factors. Raw data should contain
    --  Measurement_Data'Range items.
 
@@ -184,5 +153,34 @@ package ICM20602.Raw is
 
    function Is_Wake_On_Motion (Raw : Byte_Array) return Boolean is
      ((Raw (Interrupt_Status_Data'First) and 224) /= 0);
+
+   function SPI_Write (X : Register_Address) return Byte is
+     (Byte (X) and 16#7F#);
+   --  For read operation on the SPI bus the register address is passed with
+   --  the highest bit off (0).
+
+   function SPI_Read (X : Register_Address) return Byte is
+     (Byte (X) or 16#80#);
+   --  For write operation on the SPI bus the register address is passed with
+   --  the highest bit on (1).
+
+   function SPI_Write (X : Byte_Array) return Byte_Array is
+     ((X'First - 1 => SPI_Write (X'First)) & X);
+   --  Prefix the byte array with the register address for the SPI write
+   --  operation
+
+   function SPI_Read (X : Byte_Array) return Byte_Array is
+     ((X'First - 1 => SPI_Read (X'First)) & X);
+   --  Prefix the byte array with the register address for the SPI read
+   --  operation
+
+   function I2C_Write (X : Byte_Array) return Byte_Array is
+     ((X'First - 1 => Byte (X'First)) & X);
+   --  Prefix the byte array with the register address for the I2C write
+   --  operation
+
+   function I2C_Read (X : Byte_Array) return Byte_Array renames I2C_Write;
+   --  Prefix the byte array with the register address for the I2C read
+   --  operation
 
 end ICM20602.Raw;

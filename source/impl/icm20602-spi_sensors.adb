@@ -11,13 +11,13 @@ package body ICM20602.SPI_Sensors is
 
    procedure Read
      (Self    : ICM20602_SPI_Sensor'Class;
-      Data    : out HAL.UInt8_Array;
+      Data    : out Byte_Array;
       Success : out Boolean);
    --  Read registers starting from Data'First
 
    procedure Write
      (Self    : ICM20602_SPI_Sensor'Class;
-      Data    : HAL.UInt8_Array;
+      Data    : Byte_Array;
       Success : out Boolean);
    --  Write registers starting from Data'First
 
@@ -29,7 +29,7 @@ package body ICM20602.SPI_Sensors is
 
    overriding function Check_Chip_Id
      (Self   : ICM20602_SPI_Sensor;
-      Expect : HAL.UInt8 := 16#12#) return Boolean is
+      Expect : Byte := Chip_Id) return Boolean is
         (Sensor.Check_Chip_Id (Self, Expect));
 
    ---------------
@@ -52,7 +52,8 @@ package body ICM20602.SPI_Sensors is
      (Self  : ICM20602_SPI_Sensor;
       Timer : not null HAL.Time.Any_Delays) is
    begin
-      Sensor.Initialize (Self, Timer, Use_SPI => True);
+      Timer.Delay_Milliseconds (2);
+      Sensor.Initialize (Self, Use_SPI => True);
    end Initialize;
 
    ---------------
@@ -68,21 +69,23 @@ package body ICM20602.SPI_Sensors is
 
    procedure Read
      (Self    : ICM20602_SPI_Sensor'Class;
-      Data    : out HAL.UInt8_Array;
+      Data    : out Byte_Array;
       Success : out Boolean)
    is
       use type HAL.UInt8;
       use all type HAL.SPI.SPI_Status;
 
-      Addr : constant HAL.UInt8 := HAL.UInt8 (Data'First) or 16#80#;
+      Addr   : constant HAL.UInt8 := HAL.UInt8 (Data'First) or 16#80#;
       Status : HAL.SPI.SPI_Status;
+      Bytes  : HAL.SPI.SPI_Data_8b (1 .. Data'Length)
+        with Import, Address => Data'Address;
    begin
       Self.SPI_CS.Clear;
 
       Self.SPI_Port.Transmit (HAL.SPI.SPI_Data_8b'(1 => Addr), Status);
 
       if Status = Ok then
-         Self.SPI_Port.Receive (HAL.SPI.SPI_Data_8b (Data), Status);
+         Self.SPI_Port.Receive (Bytes, Status);
       end if;
 
       Self.SPI_CS.Set;
@@ -129,9 +132,16 @@ package body ICM20602.SPI_Sensors is
    overriding procedure Reset
      (Self    : ICM20602_SPI_Sensor;
       Timer   : not null HAL.Time.Any_Delays;
-      Success : out Boolean) is
+      Success : out Boolean)
+   is
+      procedure Sleep_1ms;
+
+      procedure Sleep_1ms is
+      begin
+         Timer.Delay_Milliseconds (1);
+      end Sleep_1ms;
    begin
-      Sensor.Reset (Self, Timer, Success);
+      Sensor.Reset (Self, Sleep_1ms'Access, Success);
    end Reset;
 
    -----------
@@ -140,19 +150,21 @@ package body ICM20602.SPI_Sensors is
 
    procedure Write
      (Self    : ICM20602_SPI_Sensor'Class;
-      Data    : HAL.UInt8_Array;
+      Data    : Byte_Array;
       Success : out Boolean)
    is
       use type HAL.UInt8;
-      use type HAL.UInt8_Array;
+      use type HAL.SPI.SPI_Data_8b;
       use all type HAL.SPI.SPI_Status;
 
-      Addr : constant HAL.UInt8 := HAL.UInt8 (Data'First) and 16#7F#;
+      Addr   : constant HAL.UInt8 := HAL.UInt8 (Data'First) and 16#7F#;
       Status : HAL.SPI.SPI_Status;
+      Bytes  : HAL.SPI.SPI_Data_8b (1 .. Data'Length)
+        with Import, Address => Data'Address;
    begin
       Self.SPI_CS.Clear;
 
-      Self.SPI_Port.Transmit (HAL.SPI.SPI_Data_8b (Addr & Data), Status);
+      Self.SPI_Port.Transmit (HAL.SPI.SPI_Data_8b'(Addr & Bytes), Status);
 
       Self.SPI_CS.Set;
 

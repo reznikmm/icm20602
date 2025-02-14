@@ -39,8 +39,8 @@ Add `icm20602` as a dependency to your crate with Alire:
 > `HAL.I2C.Read_Mem` to work correctly until I make an artificial call to
 > `HAL.I2C.Master_Transmit`. I have not yet figured out why this is happening.
 > It is possible that additional resistors are needed on the I2C bus.
-> I need to investigate. I have left this call in the `Initialize` procedure
-> for now, it should not interfere.
+> I need to investigate. I have left this call before calling the `Initialize`
+> procedure for now, it should not interfere.
 
 The driver implements two usage models: the generic package, which is more
 convenient when dealing with a single sensor, and the tagged type, which
@@ -75,6 +75,96 @@ begin
    if Sensor.Check_Chip_Id then
       Sensor.Reset (Ravenscar_Time.Delays, Ok);
       ...
+```
+
+### Low-Level Interface: `ICM20602.Raw`
+
+The `ICM20602.Raw` package provides a low-level interface for interacting with
+the ICM-20602 sensor. This package is designed to handle encoding and decoding
+of sensor register values, while allowing users to implement the actual
+read/write operations in a way that suits their hardware setup. The
+communication with the sensor is done by reading or writing one or more bytes
+to predefined registers. This package does not depend on HAL and can be used
+with DMA or any other method of interacting with the sensor.
+
+#### Purpose of ICM20602.Raw
+
+The package defines array subtypes where the index represents the register
+number, and the value corresponds to the register's data. Functions in this
+package help prepare and interpret the register values. For example, functions
+prefixed with `Set_` create the values for writing to registers, while those
+prefixed with `Get_` decode the values read from registers. Additionally,
+functions starting with `Is_` handle boolean logic values, such as checking
+if the sensor is measuring or updating.
+
+Users are responsible for implementing the reading and writing of these
+register values to the sensor.
+
+#### SPI and I2C Functions
+
+The package also provides helper functions for handling SPI and I2C
+communication with the sensor. For write operations, the register
+address is sent first, followed by one or more data bytes, as the
+sensor allows multi-byte writes. For read operations, the register
+address is sent first, and then consecutive data can be read without
+needing to specify the address for each subsequent byte.
+
+- Two functions convert register address to byte:
+
+  ```ada
+  function SPI_Write (X : Register_Address) return Byte;
+  function SPI_Read (X : Register_Address) return Byte;
+  ```
+
+- Other functions prefix a byte array with the register address:
+
+  ```ada
+    function SPI_Write (X : Byte_Array) return Byte_Array;
+    function SPI_Read (X : Byte_Array) return Byte_Array
+    function I2C_Write (X : Byte_Array) return Byte_Array;
+    function I2C_Read (X : Byte_Array) return Byte_Array;
+  ```
+
+These functions help abstract the specifics of SPI and I2C communication,
+making it easier to focus on the sensor’s register interactions without
+worrying about protocol details. For example, you configure the sensor
+by specifying the Inactivity duration and the IRR filter:
+
+```ada
+declare
+   Data : Byte_Array := ICM20602.Raw.SPI_Write
+    (ICM20602.Raw.Set_Configuration
+      ((Gyroscope     =>
+        (Power  => ICM20602.Low_Noise,
+         FSR    => 250,  --  full scale range => -250 .. +250 dps
+         Filter =>  --  Low-pass filter 176Hz on 1kHz rate
+           (Rate => ICM20602.Rate_1kHz, Bandwidth_1kHz => 176)),
+        Accelerometer =>
+         (Power  => ICM20602.Low_Noise,
+          FSR    => 2,  --  full scale range => -2g .. +2g
+          Filter =>  --  Low-pass filter 176Hz on 1kHz rate
+            (Rate => ICM20602.Rate_1kHz, Bandwidth_1kHz => 176)),
+        Rate_Divider  => 2));  --  Divide 1kHz rate by 2, so ODR = 500Hz
+begin
+   --  Now write Data to the sensor by SPI
+```
+
+The reading looks like this:
+
+```ada
+declare
+   Data : Byte_Array := ICM20602.Raw.SPI_Read
+    ((ICM20602.Raw.Measurement_Data => 0));
+   Gyro  : ICM20602.Angular_Speed_Vector;
+   Accel : ICM20602.Acceleration_Vector;
+begin
+   --  Start SPI exchange (read/write) then decode Data:
+   ICM20602.Raw.Get_Measurement
+     (Data,
+      GFSR  => 250,  --  Gyroscope full scale range
+      AFSR  => 2,    --  Accelerometer full scale range
+      Gyro  => Gyro,
+      Accel => Accel);
 ```
 
 ## Examples

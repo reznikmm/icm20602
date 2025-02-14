@@ -30,7 +30,7 @@ package ICM20602.I2C_Sensors is
 
    overriding function Check_Chip_Id
      (Self   : ICM20602_I2C_Sensor;
-      Expect : HAL.UInt8 := 16#12#) return Boolean;
+      Expect : Byte := Chip_Id) return Boolean;
    --  Read the chip ID and check that it matches
 
    overriding procedure Reset
