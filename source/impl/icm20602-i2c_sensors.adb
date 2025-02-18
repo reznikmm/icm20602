@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -56,6 +56,14 @@ package body ICM20602.I2C_Sensors is
       --  Start-up time for register read/write (From power-up) 2ms max.
       Sensor.Initialize (Self, Use_SPI => False);
    end Initialize;
+
+   -----------------
+   -- Is_Reseting --
+   -----------------
+
+   overriding function Is_Reseting
+     (Self : ICM20602_I2C_Sensor) return Boolean is
+       (Sensor.Is_Reseting (Self));
 
    ---------------
    -- Measuring --
@@ -128,17 +136,9 @@ package body ICM20602.I2C_Sensors is
 
    overriding procedure Reset
      (Self    : ICM20602_I2C_Sensor;
-      Timer   : not null HAL.Time.Any_Delays;
-      Success : out Boolean)
-   is
-      procedure Sleep_1ms;
-
-      procedure Sleep_1ms is
-      begin
-         Timer.Delay_Milliseconds (1);
-      end Sleep_1ms;
+      Success : out Boolean) is
    begin
-      Sensor.Reset (Self, Sleep_1ms'Access, Success);
+      Sensor.Reset (Self, Success);
    end Reset;
 
    -----------

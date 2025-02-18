@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -18,6 +18,10 @@ project ICM20602_LCD is
       "../../source", "../../source/impl");
    for Object_Dir use ".obj/";
    for Create_Missing_Dirs use "True";
+
+   package Builder is
+     for Global_Configuration_Pragmas use "icm20602_lcd.adc";
+   end Builder;
 
    package Compiler renames STM32_F4VE_Full.Compiler;
 

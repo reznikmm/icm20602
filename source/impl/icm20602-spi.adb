@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -66,6 +66,12 @@ package body ICM20602.SPI is
       Sensor.Initialize (Chip, Use_SPI => True);
    end Initialize;
 
+   -----------------
+   -- Is_Reseting --
+   -----------------
+
+   function Is_Reseting return Boolean is (Sensor.Is_Reseting (Chip));
+
    ---------------
    -- Measuring --
    ---------------
@@ -131,18 +137,9 @@ package body ICM20602.SPI is
    -- Reset --
    -----------
 
-   procedure Reset
-     (Timer   : not null HAL.Time.Any_Delays;
-      Success : out Boolean)
-   is
-      procedure Sleep_1ms;
-
-      procedure Sleep_1ms is
-      begin
-         Timer.Delay_Milliseconds (1);
-      end Sleep_1ms;
+   procedure Reset (Success : out Boolean) is
    begin
-      Sensor.Reset (Chip, Sleep_1ms'Access, Success);
+      Sensor.Reset (Chip, Success);
    end Reset;
 
    -----------

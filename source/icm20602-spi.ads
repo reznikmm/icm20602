@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -23,10 +23,11 @@ package ICM20602.SPI is
    function Check_Chip_Id (Expect : Byte := Chip_Id) return Boolean;
    --  Read the chip ID and check that it matches
 
-   procedure Reset
-     (Timer   : not null HAL.Time.Any_Delays;
-      Success : out Boolean);
+   procedure Reset (Success : out Boolean);
    --  Issue a soft reset and wait until the chip is ready.
+
+   function Is_Reseting return Boolean;
+   --  Check if the reset is in progress.
 
    procedure Configure
      (Value   : Sensor_Configuration;

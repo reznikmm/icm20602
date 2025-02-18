@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -427,8 +427,13 @@ begin
    end if;
 
    --  Reset ICM20602
-   Sensor.Reset (Ravenscar_Time.Delays, Ok);
+   Sensor.Reset (Ok);
    pragma Assert (Ok);
+
+   --  Wait until reset is complete
+   while Sensor.Is_Reseting loop
+      Ravenscar_Time.Delays.Delay_Milliseconds (1);
+   end loop;
 
    Configure_Sensor;
    Ravenscar_Time.Delays.Delay_Milliseconds (100);  --  Gyro start-up time
