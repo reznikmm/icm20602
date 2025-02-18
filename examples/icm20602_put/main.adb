@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -62,8 +62,13 @@ begin
    end if;
 
    --  Reset ICM-20602
-   ICM20602_I2C.Reset (Ravenscar_Time.Delays, Ok);
+   ICM20602_I2C.Reset (Ok);
    pragma Assert (Ok);
+
+   --  Wait untill reset is complete
+   while ICM20602_I2C.Is_Reseting loop
+      Ravenscar_Time.Delays.Delay_Milliseconds (1);
+   end loop;
 
    --  Set ICM-20602 up
    ICM20602_I2C.Configure

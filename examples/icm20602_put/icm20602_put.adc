@@ -1,0 +1,6 @@
+--  SPDX-FileCopyrightText: 2025 Max Reznik <reznikmm@gmail.com>
+--
+--  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+----------------------------------------------------------------
+
+pragma Restrictions (No_Implicit_Dynamic_Code);

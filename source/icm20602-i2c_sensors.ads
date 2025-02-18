@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -35,9 +35,11 @@ package ICM20602.I2C_Sensors is
 
    overriding procedure Reset
      (Self    : ICM20602_I2C_Sensor;
-      Timer   : not null HAL.Time.Any_Delays;
       Success : out Boolean);
    --  Issue a soft reset and wait until the chip is ready.
+
+   overriding function Is_Reseting (Self : ICM20602_I2C_Sensor) return Boolean;
+   --  Check if the reset is in progress.
 
    overriding procedure Configure
      (Self    : in out ICM20602_I2C_Sensor;

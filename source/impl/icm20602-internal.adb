@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -106,6 +106,19 @@ package body ICM20602.Internal is
       end if;
    end Initialize;
 
+   -----------------
+   -- Is_Reseting --
+   -----------------
+
+   function Is_Reseting (Device  : Device_Context)  return Boolean is
+      Ok   : Boolean;
+      Data : Raw.Reset_Data;
+   begin
+      Read (Device, Data, Ok);
+
+      return Ok and then Raw.Is_Reseting (Data);
+   end Is_Reseting;
+
    ---------------
    -- Measuring --
    ---------------
@@ -169,47 +182,11 @@ package body ICM20602.Internal is
    -----------
 
    procedure Reset
-     (Device    : Device_Context;
-      Delay_1ms : not null access procedure;
-      Success   : out Boolean)
-   is
+     (Device  : Device_Context;
+      Success : out Boolean) is
    begin
       Write (Device, Raw.Set_Reset, Success);
       --  PWR_MGMT_1: DEVICE_RESET
-
-      while Success loop
-         declare
-            PWR_MGMT_1 : Raw.Reset_Data;
-         begin
-            Delay_1ms.all;
-            Read (Device, PWR_MGMT_1, Success);
-
-            exit when not Raw.Is_Reseting (PWR_MGMT_1);
-         end;
-      end loop;
-
-      if Success then
-         Write
-           (Device,
-            [16#69# => 16#02#, 16#6A# => 5, 16#6B# => 1, 16#6C# => 0],
-            Success);
-         --  ACCEL_INTEL_CTRL/OUTPUT_LIMIT
-         --  To avoid limiting sensor output to less than 0x7FFF, set this bit
-         --  to 1. This should be done every time the ICM-20602 is powered up.
-         --
-         --  USER_CTRL: FIFO_RST, SIG_COND_RST
-         --  PWR_MGMT_1: CLKSEL=1
-         --  PWR_MGMT_2: enable all axis
-      end if;
-
-      if Success then
-         Write
-           (Device,
-            Raw.Set_Interrupts
-              (Clear_On_Read => True,
-               Data_Ready_Enabled => True),
-            Success);
-      end if;
    end Reset;
 
 end ICM20602.Internal;

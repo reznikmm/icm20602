@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -21,9 +21,11 @@ package ICM20602.Sensors is
 
    procedure Reset
      (Self    : Sensor;
-      Timer   : not null HAL.Time.Any_Delays;
       Success : out Boolean) is abstract;
    --  Issue a soft reset and wait until the chip is ready.
+
+   function Is_Reseting (Self : Sensor) return Boolean is abstract;
+   --  Check if the reset is in progress.
 
    procedure Configure
      (Self    : in out Sensor;

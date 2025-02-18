@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -64,10 +64,12 @@ package ICM20602.Internal is
       Success : out Boolean);
 
    procedure Reset
-     (Device    : Device_Context;
-      Delay_1ms : not null access procedure;
-      Success   : out Boolean);
-   --  Issue a soft reset and wait until the chip is ready.
+     (Device  : Device_Context;
+      Success : out Boolean);
+   --  Issue a soft reset without a wait until the chip is ready.
+
+   function Is_Reseting (Device  : Device_Context)  return Boolean;
+   --  Check if the reset is in progress.
 
    function Measuring (Device  : Device_Context) return Boolean;
    --  Check if a measurement is in progress
