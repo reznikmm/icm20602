@@ -97,8 +97,8 @@ package ICM20602.Raw is
       Gyro  : out Raw_Vector;
       Accel : out Raw_Vector)
      with Pre =>
-       Raw'First in Measurement_Data'Range
-         and then Raw'Last in Measurement_Data'Range;
+       Measurement_Data'First in Raw'Range
+         and then Measurement_Data'Last in Raw'Range;
    --
    --  Decode raw measurement. Raw data should contain Measurement_Data'Range
    --  items.
@@ -110,8 +110,8 @@ package ICM20602.Raw is
       Gyro  : out Angular_Speed_Vector;
       Accel : out Acceleration_Vector)
      with Pre =>
-       Raw'First in Measurement_Data'Range
-         and then Raw'Last in Measurement_Data'Range;
+       Measurement_Data'First in Raw'Range
+         and then Measurement_Data'Last in Raw'Range;
    --
    --  Decode measurement according to scale factors. Raw data should contain
    --  Measurement_Data'Range items.
@@ -153,6 +153,10 @@ package ICM20602.Raw is
 
    function Is_Wake_On_Motion (Raw : Byte_Array) return Boolean is
      ((Raw (Interrupt_Status_Data'First) and 224) /= 0);
+
+   ----------------------------------
+   -- SPI/I2C Write/Read functions --
+   ----------------------------------
 
    function SPI_Write (X : Register_Address) return Byte is
      (Byte (X) and 16#7F#);
