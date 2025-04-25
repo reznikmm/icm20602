@@ -122,8 +122,8 @@ package ICM20602.Raw is
    Set_Reset : constant Reset_Data := (16#6B# => 16#80#);
    --  Reset the internal registers and restores the default settings.
 
-   function Is_Reseting (Raw : Reset_Data) return Boolean is
-     ((Raw (Raw'First) and 16#80#) /= 0);
+   function Is_Reseting (Raw : Byte_Array) return Boolean is
+     ((Raw (Reset_Data'First) and 16#80#) /= 0);
 
    subtype Configure_Interrupts_Data is Byte_Array (16#37# .. 16#38#);
    --  * REGISTER 55 – INT/DRDY PIN / BYPASS ENABLE CONFIGURATION
