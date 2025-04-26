@@ -15,7 +15,7 @@ jobs:
       with:
         repository: AdaCore/Ada_Drivers_Library
         path: adl
-    - uses: alire-project/setup-alire@v3
+    - uses: alire-project/setup-alire@v5
     - name: Build project
       run: alr build
     - name: Build examples

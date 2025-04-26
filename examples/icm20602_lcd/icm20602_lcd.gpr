@@ -3,18 +3,18 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
-with "stm32_f4ve_full.gpr";
+with "blinky_stm32_f4ve.gpr";
 --  with "icm20602.gpr";
---  Can't depend on it, because stm32_f4ve_full has a copy of HAL
+--  Can't depend on it, because Blinky_STM32_f4VE has a copy of HAL
 
 project ICM20602_LCD is
 
-   for Runtime ("Ada") use STM32_f4VE_Full'Runtime ("Ada");
+   for Runtime ("Ada") use Blinky_STM32_f4VE'Runtime ("Ada");
    for Target use "arm-eabi";
    for Main use ("main.adb");
    for Languages use ("Ada");
    for Source_Dirs use
-     (".", "../../adl/examples/shared/common/gui",
+     (".",
       "../../source", "../../source/impl");
    for Object_Dir use ".obj/";
    for Create_Missing_Dirs use "True";
@@ -23,7 +23,7 @@ project ICM20602_LCD is
      for Global_Configuration_Pragmas use "icm20602_lcd.adc";
    end Builder;
 
-   package Compiler renames STM32_F4VE_Full.Compiler;
+   package Compiler renames Blinky_STM32_f4VE.Compiler;
 
    package Ide is
       for Program_Host use "localhost:4242";

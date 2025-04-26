@@ -169,18 +169,16 @@ begin
 
 ## Examples
 
-You need `Ada_Drivers_Library` in `adl` directory. Clone it then run Alire
-to build:
+Examples use `Ada_Drivers_Library`. It's installed by Alire (alr >= 2.1.0 required).
+Run Alire to build:
 
-    git clone https://github.com/AdaCore/Ada_Drivers_Library.git adl
-    cd examples
-    alr build
+    alr -C examples build
 
 ### GNAT Studio
 
 Launch GNAT Studio with Alire:
 
-    cd examples; alr exec gnatstudio -- -P icm20602_put/icm20602_put.gpr
+    alr -C examples exec gnatstudio -- -P icm20602_put/icm20602_put.gpr
 
 ### VS Code
 
