@@ -33,6 +33,9 @@ Add `icm20602` as a dependency to your crate with Alire:
 
 ## Usage
 
+The sensor supports SPI (mode 0 or 3) with a frequency of up to 10 MHz
+and I2C at frequencies up to 400 kHz.
+
 > ### Note
 >
 > In my configuration of icm-20602 with stm32f407, I cannot get

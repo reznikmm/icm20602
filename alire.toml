@@ -19,6 +19,7 @@ generate_c = false
 development.optimization = ["-O0"]
 development.style_checks = ["-gnaty"]
 development.contracts = "Yes"
+"*".debug_info = "Yes"
 
 [[depends-on]]
 hal = "~0.3 | ^1"
