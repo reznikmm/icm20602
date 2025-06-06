@@ -20,7 +20,7 @@ The ICM-20602 driver enables the following functionalities:
 - Detect the presence of the sensor.
 - Perform a reset operation.
 - Configure the range, the parameters of the digital filter and sampling rate
-  for each channel. **It looks like low-power mode isn't working for now :-/.**
+  for each channel.
 - Adjust offsets for gyroscope and accelerometer.
 - Conduct measurements as raw 16-bit values and scaled values.
 - Configure interrupts ~~and Wake-on-motion (TBD)~~
@@ -38,10 +38,10 @@ and I2C at frequencies up to 400 kHz.
 
 > ### Note
 >
-> In my configuration of icm-20602 with stm32f407, I cannot get
+> In my configuration of icm-20602 with ADL stm32f407, I cannot get
 > `HAL.I2C.Read_Mem` to work correctly until I make an artificial call to
 > `HAL.I2C.Master_Transmit`. I have not yet figured out why this is happening.
-> It is possible that additional resistors are needed on the I2C bus.
+> I guess there is an issue in I2C in Ada Driver Library.
 > I need to investigate. I have left this call before calling the `Initialize`
 > procedure for now, it should not interfere.
 
@@ -79,6 +79,137 @@ begin
       Sensor.Reset (Ravenscar_Time.Delays, Ok);
       ...
 ```
+### Configuring the Sensor
+
+The sensor is configured by passing a single configuration record of type
+`Sensor_Configuration` to the Configure procedure. This record contains all
+the settings for the gyroscope, accelerometer, and the final output data rate.
+
+The main configuration record is defined as follows:
+
+```ada
+type Sensor_Configuration is record
+   Gyroscope     : Gyroscope_Configuration;
+   Accelerometer : Accelerometer_Configuration;
+   Rate_Divider  : Sample_Rate_Divider := 1;
+end record;
+```
+
+It has three key fields:
+
+- `Gyroscope`: Holds all settings specific to the gyroscope.
+- `Accelerometer`: Holds all settings specific to the accelerometer.
+- `Rate_Divider`: An integer used to set the final Output Data Rate (ODR).
+  See the section on ODR below for details.
+
+**Important Constraint**: The sensor hardware does not support running both
+the gyroscope and the accelerometer in `Low_Power` mode simultaneously.
+The driver enforces this with a dynamic predicate on the
+`Sensor_Configuration` type. If you need to save power, it is recommended
+to use `Low_Power` for the gyroscope and `Low_Noise` for the accelerometer.
+
+#### Power Modes
+
+Both the gyroscope and accelerometer are configured primarily by selecting
+a Power mode. This choice determines which other configuration options are
+available.
+
+- `Off`: The sensor is turned off and consumes no power. No measurements
+  are taken.
+- `Low_Noise`: This is the high-performance mode. It offers the most
+  configuration options, including access to higher internal sampling
+  rates and advanced filtering.
+- `Low_Power`: A power-saving mode with a more limited set of options.
+  The internal sample rate is fixed at 1kHz.
+- `Standby` (Gyroscope Only): A low-power mode where the gyroscope
+  is ready to start up quickly but is not taking measurements.
+
+#### Gyroscope Configuration
+
+Configuration is based on the selected Power mode.
+
+In `Low_Noise` Mode:
+
+This mode provides maximum flexibility.
+
+- `FSR`: Set the Full-Scale Range (e.g., ±250, ±500, ±1000, or ±2000 dps).
+- `Filter`: Configure the digital low-pass filter (DLPF).
+  - `Rate`: Sets the internal sensor sample rate. Can be `Rate_1kHz`,
+    `Rate_8kHz`, or `Rate_32kHz`.
+  - `Bandwidth`: Sets the filter's cutoff frequency, which depends
+    on the selected Rate.
+
+In `Low_Power` Mode:
+
+This mode is optimized for low energy consumption.
+
+- The internal sample rate is fixed at 1kHz.
+- `FSR`: Set the Full-Scale Range.
+- `Average`: Set the number of samples to be averaged by the hardware
+   to reduce noise.
+- `Bandwidth_1kHz`: Configure the low-pass filter bandwidth for the 1kHz rate.
+
+#### Accelerometer Configuration
+
+Similar to the gyroscope, configuration depends on the Power mode.
+
+In `Low_Noise` Mode:
+
+- `FSR`: Set the Full-Scale Range (e.g., ±2, ±4, ±8, or ±16 **g**).
+- `Filter`: Configure the digital low-pass filter.
+  - `Rate`: Sets the internal sensor sample rate. Can be `Rate_1kHz`
+    or `Rate_4kHz`.
+  - `Bandwidth`: Sets the filter's cutoff frequency.
+
+In `Low_Power` Mode:
+
+- The internal sample rate is fixed at 1kHz.
+- `FSR`: Set the Full-Scale Range.
+- `Average`: Set the number of hardware samples to average (1, 2, 4, 8, 16
+  or 32).
+
+#### Output Data Rate (ODR) and Rate_Divider
+
+The final rate at which data is made available (ODR) is determined by the
+internal sample rate and the Rate_Divider.
+
+**Formula**: `ODR` = Internal Sample Rate / `Rate_Divider`
+
+**Crucial Rule**: The `Rate_Divider` is only effective when the internal sample
+rate is 1kHz. This occurs in the following scenarios:
+
+- When a sensor is in `Low_Power` mode.
+- When a sensor is in `Low_Noise` mode and its `Filter.Rate` is explicitly
+  set to Rate_1kHz.
+
+If a higher internal rate (e.g., 4kHz, 8kHz, or 32kHz) is selected,
+the `Rate_Divider` is ignored, and the ODR will be equal to that internal rate.
+
+#### Configuration Example
+
+Here is an example of how to configure both sensors to run in `Low_Noise`
+mode with a final Output Data Rate of 500Hz.
+
+```ada
+ICM20602_I2C.Configure
+  (Config =>
+    (Gyroscope     =>
+       (Power  => ICM20602.Low_Noise,
+        FSR    => 250,  -- Full scale range => -250 .. +250 dps
+        Filter =>      -- Low-pass filter 176Hz on 1kHz rate
+          (Rate => ICM20602.Rate_1kHz, Bandwidth_1kHz => 176)),
+     Accelerometer =>
+       (Power  => ICM20602.Low_Noise,
+        FSR    => 2,    -- Full scale range => -2g .. +2g
+        Filter =>      -- Low-pass filter 176Hz on 1kHz rate
+          (Rate => ICM20602.Rate_1kHz, Bandwidth_1kHz => 176)),
+     Rate_Divider  => 2),  -- Divide 1kHz rate by 2, so ODR = 500Hz
+   Ok     => Ok_Flag);
+```
+
+In this example, both sensors are set to an internal sample rate of 1kHz.
+The `Rate_Divider` of 2 is then applied to this base rate, resulting
+in a final ODR of `1000Hz / 2 = 500Hz`.
 
 ### Accelerometer Offset Adjustment
 
