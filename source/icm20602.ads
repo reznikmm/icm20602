@@ -75,6 +75,7 @@ package ICM20602 is
                   Filter : Gyroscope_Low_Pass_Filter_Configuration;
                when Low_Power =>
                   Average : Average_Count;
+                  Bandwidth_1kHz : Low_Pass_Filter_Bandwidth range 5 .. 176;
                when others =>
                   null;
             end case;
@@ -133,7 +134,13 @@ package ICM20602 is
       Gyroscope     : Gyroscope_Configuration;
       Accelerometer : Accelerometer_Configuration;
       Rate_Divider  : Sample_Rate_Divider := 1;
-   end record;
+   end record
+     with Dynamic_Predicate => not
+       (Sensor_Configuration.Gyroscope.Power = Low_Power
+          and Sensor_Configuration.Accelerometer.Power = Low_Power);
+   --
+   --  The accelerometer and gyroscope should not both be in low-power mode,
+   --  use Gyro.Power = Low_Power and Accel.Power = Low_Noise instead.
 
    type Raw_Vector is record
       X, Y, Z : Interfaces.Integer_16;

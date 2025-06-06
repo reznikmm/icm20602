@@ -202,7 +202,7 @@ package body ICM20602.Raw is
                when 2000 => 3));
 
       DLPF_CFG : constant Byte :=
-        (if Value.Gyroscope.Power = Low_Noise then
+        (if Value.Gyroscope.Power in Low_Noise then
            (case Value.Gyroscope.Filter.Rate is
                when Rate_1kHz =>
                  (case Value.Gyroscope.Filter.Bandwidth_1kHz is
@@ -219,6 +219,15 @@ package body ICM20602.Raw is
                      when 3281 => 7,
                      when others => 0),
                when Rate_32kHz => 0)
+         elsif Value.Gyroscope.Power in Low_Power then
+           (case Value.Gyroscope.Bandwidth_1kHz is
+               when 176    => 1,
+               when 92     => 2,
+               when 41     => 3,
+               when 20     => 4,
+               when 10     => 5,
+               when 5      => 6,
+               when others => 0)
          else 1);
 
       ACCEL_FS_SEL : constant Byte :=
