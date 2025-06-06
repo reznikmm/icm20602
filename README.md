@@ -109,11 +109,46 @@ This driver provides two methods for writing offset values:
 * Using Physical Units (Recommended): You can use functions that accept
   a fixed-point value representing the desired offset in **g**.
   This is the easiest and safest method.
-*  Using Raw Values: For advanced use cases, the driver also allows you
-   to directly read and write the raw integer values of the offset
-   registers.
+* Using Raw Values: For advanced use cases, the driver also allows you
+  to directly read and write the raw integer values of the offset
+  registers.
 
-**Note:** The offset registers are not affected by a software reset.
+**Note:** The offset registers are **not affected** by a software reset.
+
+### Gyroscope Offset Adjustment
+
+The sensor includes 16-bit hardware registers to correct the gyroscope's
+zero offset. The corrective effect on the final, scaled measurements is
+consistent across all Full-Scale Range (FSR) settings.
+
+**How It Works**:
+A change in the offset register corresponds to a fixed physical acceleration
+value. Each increment (1 LSB) of the offset register adjusts the final scaled
+output by approximately 0.061 degree/s (or more precisely, 2000/32768). This
+allows you to apply a desired correction in degree/s without needing to account
+for the current FSR.
+
+On the other side, this means that while the effect on the final scaled output
+is constant, the effect on the raw sensor data varies with the FSR setting,
+as shown below:
+
+|FSR    | Raw value change per 1 offset |
+|-------|----------|
+| 250   | 4 LSBs   |
+| 500   | 2 LSBs   |
+| 1000  | 1 LSBs   |
+| 2000  | 0.5 LSBs |
+
+This driver provides two methods for writing offset values:
+
+* Using Physical Units (Recommended): You can use functions that accept
+  a fixed-point value representing the desired offset in **degree/s**.
+  This is the easiest and safest method.
+* Using Raw Values: For advanced use cases, the driver also allows you
+  to directly read and write the raw integer values of the offset
+  registers.
+
+**Note:** The offset registers are **not affected** by a software reset.
 
 ### Low-Level Interface: `ICM20602.Raw`
 

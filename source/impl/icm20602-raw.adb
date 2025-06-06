@@ -9,6 +9,8 @@ package body ICM20602.Raw is
 
    use type Interfaces.Unsigned_16;
 
+   Gyroscope_Offset_Scale : constant := 1.0 / 2.0**15;
+
    function Cast is new Ada.Unchecked_Conversion
      (Interfaces.Unsigned_16, Interfaces.Integer_16);
 
@@ -49,9 +51,9 @@ package body ICM20602.Raw is
       Raw : constant Raw_Vector := Get_Raw_Gyroscope_Offset (Value);
    begin
       return
-        (X => Int (Raw.X) * Scaled_Angular_Speed'Small,
-         Y => Int (Raw.Y) * Scaled_Angular_Speed'Small,
-         Z => Int (Raw.Z) * Scaled_Angular_Speed'Small);
+        (X => Int (Raw.X) * Gyroscope_Offset_Scale,
+         Y => Int (Raw.Y) * Gyroscope_Offset_Scale,
+         Z => Int (Raw.Z) * Gyroscope_Offset_Scale);
    end Get_Gyroscope_Offset;
 
    ----------------------------------
@@ -312,9 +314,9 @@ package body ICM20602.Raw is
       type Int is delta 1.0 range -2.0**15 .. 2.0**15 - 1.0;
 
       Raw : constant Raw_Vector :=
-        (Interfaces.Integer_16 (Int'(Value.X / Scaled_Angular_Speed'Small)),
-         Interfaces.Integer_16 (Int'(Value.Y / Scaled_Angular_Speed'Small)),
-         Interfaces.Integer_16 (Int'(Value.Z / Scaled_Angular_Speed'Small)));
+        (Interfaces.Integer_16 (Int'(Value.X / Gyroscope_Offset_Scale)),
+         Interfaces.Integer_16 (Int'(Value.Y / Gyroscope_Offset_Scale)),
+         Interfaces.Integer_16 (Int'(Value.Z / Gyroscope_Offset_Scale)));
    begin
       return Set_Raw_Gyroscope_Offset (Raw);
    end Set_Gyroscope_Offset;
@@ -367,5 +369,14 @@ package body ICM20602.Raw is
        0,
        Byte'Mod (Uncast (2 * Value.Z) / 256),
        Byte'Mod (2 * Value.Z));
+
+   function Set_Raw_Gyroscope_Offset
+     (Value : Raw_Vector) return Gyroscope_Offset_Data is
+      (Byte'Mod (Uncast (Value.X) / 256),
+       Byte'Mod (Value.X),
+       Byte'Mod (Uncast (Value.Y) / 256),
+       Byte'Mod (Value.Y),
+       Byte'Mod (Uncast (Value.Z) / 256),
+       Byte'Mod (Value.Z));
 
 end ICM20602.Raw;

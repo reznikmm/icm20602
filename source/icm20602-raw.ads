@@ -37,13 +37,7 @@ package ICM20602.Raw is
    --  REGISTER 19..24 GYRO OFFSET ADJUSTMENT REGISTER. Scale???
 
    function Set_Raw_Gyroscope_Offset
-     (Value : Raw_Vector) return Gyroscope_Offset_Data is
-      (Byte (Value.X / 256),
-       Byte (Value.X mod 256),
-       Byte (Value.Y / 256),
-       Byte (Value.Y mod 256),
-       Byte (Value.Z / 256),
-       Byte (Value.Z mod 256));
+     (Value : Raw_Vector) return Gyroscope_Offset_Data;
    --  Encode gyroscope offsets
 
    function Set_Gyroscope_Offset
