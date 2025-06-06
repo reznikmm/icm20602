@@ -21,9 +21,9 @@ The ICM-20602 driver enables the following functionalities:
 - Perform a reset operation.
 - Configure the range, the parameters of the digital filter and sampling rate
   for each channel. **It looks like low-power mode isn't working for now :-/.**
-- ~~Adjust offsets for gyroscope and accelerometer (TBD)~~.
+- Adjust offsets for gyroscope and accelerometer.
 - Conduct measurements as raw 16-bit values and scaled values.
-- ~~Configure interrupts and Wake-on-motion (TBD)~~
+- Configure interrupts ~~and Wake-on-motion (TBD)~~
 
 ## Install
 
@@ -79,6 +79,41 @@ begin
       Sensor.Reset (Ravenscar_Time.Delays, Ok);
       ...
 ```
+
+### Accelerometer Offset Adjustment
+
+The sensor includes 15-bit hardware registers to correct the accelerometer's
+zero-g offset. The corrective effect on the final, scaled measurements is
+consistent across all Full-Scale Range (FSR) settings.
+
+**How It Works**:
+A change in the offset register corresponds to a fixed physical acceleration
+value. Each increment (1 LSB) of the offset register adjusts the final scaled
+output by approximately 0.977 mg (or more precisely, 1g/1024). This allows you
+to apply a desired correction in **g** without needing to account for
+the current FSR.
+
+On the other side, this means that while the effect on the final scaled output
+is constant, the effect on the raw sensor data varies with the FSR setting,
+as shown below:
+
+|FSR    | Raw value change per 1 offset |
+|-------|---------|
+| ±2g   | 16 LSBs |
+| ±4g   | 8 LSBs  |
+| ±8g   | 4 LSBs  |
+| ±16g  | 2 LSBs  |
+
+This driver provides two methods for writing offset values:
+
+* Using Physical Units (Recommended): You can use functions that accept
+  a fixed-point value representing the desired offset in **g**.
+  This is the easiest and safest method.
+*  Using Raw Values: For advanced use cases, the driver also allows you
+   to directly read and write the raw integer values of the offset
+   registers.
+
+**Note:** The offset registers are not affected by a software reset.
 
 ### Low-Level Interface: `ICM20602.Raw`
 

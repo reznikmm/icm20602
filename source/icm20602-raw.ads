@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -36,7 +36,7 @@ package ICM20602.Raw is
    subtype Gyroscope_Offset_Data is Byte_Array (16#13# .. 16#18#);
    --  REGISTER 19..24 GYRO OFFSET ADJUSTMENT REGISTER. Scale???
 
-   function Set_Gyroscope_Offset
+   function Set_Raw_Gyroscope_Offset
      (Value : Raw_Vector) return Gyroscope_Offset_Data is
       (Byte (Value.X / 256),
        Byte (Value.X mod 256),
@@ -46,21 +46,47 @@ package ICM20602.Raw is
        Byte (Value.Z mod 256));
    --  Encode gyroscope offsets
 
+   function Set_Gyroscope_Offset
+     (Value : Angular_Speed_Vector) return Gyroscope_Offset_Data;
+   --  Encode gyroscope offsets
+
+   function Get_Raw_Gyroscope_Offset (Value : Byte_Array) return Raw_Vector
+     with Pre =>
+       Gyroscope_Offset_Data'First in Value'Range
+         and then Gyroscope_Offset_Data'Last in Value'Range;
+   --  Decode gyroscope offsets
+
+   function Get_Gyroscope_Offset
+     (Value : Byte_Array) return Angular_Speed_Vector
+     with Pre =>
+       Gyroscope_Offset_Data'First in Value'Range
+         and then Gyroscope_Offset_Data'Last in Value'Range;
+   --  Decode gyroscope offsets
+
    subtype Accelerometer_Offset_Data is Byte_Array (16#77# .. 16#7E#);
    --  Set REGISTER 119..126 ACCELEROMETER OFFSET ADJUSTMENT REGISTER
-   --  In +/- 16g scale. 15 bits!!!
+   --  ±16g scale, 15 bits. It's set at the factory. It will be added to value
+
+   function Set_Raw_Accelerometer_Offset
+     (Value : Raw_Vector) return Accelerometer_Offset_Data;
+   --  Encode accelerometer offsets
 
    function Set_Accelerometer_Offset
-     (Value : Raw_Vector) return Accelerometer_Offset_Data is
-      (Byte (2 * Value.X / 256),
-       Byte (2 * Value.X mod 256),
-       0,
-       Byte (2 * Value.Y / 256),
-       Byte (2 * Value.Y mod 256),
-       0,
-       Byte (2 * Value.Z / 256),
-       Byte (2 * Value.Z mod 256));
+     (Value : Accelerometer_Offset_Vector) return Accelerometer_Offset_Data;
    --  Encode accelerometer offsets
+
+   function Get_Raw_Accelerometer_Offset (Value : Byte_Array) return Raw_Vector
+     with Pre =>
+       Accelerometer_Offset_Data'First in Value'Range
+         and then Accelerometer_Offset_Data'Last in Value'Range;
+   --  Decode accelerometer offsets
+
+   function Get_Accelerometer_Offset
+     (Value : Byte_Array) return Accelerometer_Offset_Vector
+     with Pre =>
+       Accelerometer_Offset_Data'First in Value'Range
+         and then Accelerometer_Offset_Data'Last in Value'Range;
+   --  Decode accelerometer offsets
 
    subtype Sample_Rate_Data is Byte_Array (16#19# .. 16#19#);
    --  Set REGISTER 25 SAMPLE RATE DIVIDER

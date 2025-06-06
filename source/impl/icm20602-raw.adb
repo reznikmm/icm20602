@@ -7,6 +7,72 @@ with Ada.Unchecked_Conversion;
 
 package body ICM20602.Raw is
 
+   use type Interfaces.Unsigned_16;
+
+   function Cast is new Ada.Unchecked_Conversion
+     (Interfaces.Unsigned_16, Interfaces.Integer_16);
+
+   function Decode (Data : Byte_Array) return Interfaces.Integer_16 is
+     (Cast
+       (Interfaces.Shift_Left (Interfaces.Unsigned_16 (Data (Data'First)), 8)
+         + Interfaces.Unsigned_16 (Data (Data'Last))));
+
+   function Uncast is new Ada.Unchecked_Conversion
+     (Interfaces.Integer_16, Interfaces.Unsigned_16);
+
+   ------------------------------
+   -- Get_Accelerometer_Offset --
+   ------------------------------
+
+   function Get_Accelerometer_Offset
+     (Value : Byte_Array) return Accelerometer_Offset_Vector
+   is
+      subtype Int is Integer range -2**14 .. 2**14 - 1;
+
+      Raw : constant Raw_Vector := Get_Raw_Accelerometer_Offset (Value);
+   begin
+      return
+        (X => Int (Raw.X) * Accelerometer_Offset'Small,
+         Y => Int (Raw.Y) * Accelerometer_Offset'Small,
+         Z => Int (Raw.Z) * Accelerometer_Offset'Small);
+   end Get_Accelerometer_Offset;
+
+   --------------------------
+   -- Get_Gyroscope_Offset --
+   --------------------------
+
+   function Get_Gyroscope_Offset
+     (Value : Byte_Array) return Angular_Speed_Vector
+   is
+      subtype Int is Integer range -2**15 .. 2**15 - 1;
+
+      Raw : constant Raw_Vector := Get_Raw_Gyroscope_Offset (Value);
+   begin
+      return
+        (X => Int (Raw.X) * Scaled_Angular_Speed'Small,
+         Y => Int (Raw.Y) * Scaled_Angular_Speed'Small,
+         Z => Int (Raw.Z) * Scaled_Angular_Speed'Small);
+   end Get_Gyroscope_Offset;
+
+   ----------------------------------
+   -- Get_Raw_Accelerometer_Offset --
+   ----------------------------------
+
+   function Get_Raw_Accelerometer_Offset
+     (Value : Byte_Array) return Raw_Vector is
+       (X => Decode (Value (16#77# .. 16#78#)) / 2,
+        Y => Decode (Value (16#7A# .. 16#7B#)) / 2,
+        Z => Decode (Value (16#7D# .. 16#7E#)) / 2);
+
+   ------------------------------
+   -- Get_Raw_Gyroscope_Offset --
+   ------------------------------
+
+   function Get_Raw_Gyroscope_Offset (Value : Byte_Array) return Raw_Vector is
+     (X => Decode (Value (16#13# .. 16#14#)),
+      Y => Decode (Value (16#15# .. 16#16#)),
+      Z => Decode (Value (16#17# .. 16#18#)));
+
    ---------------------
    -- Get_Measurement --
    ---------------------
@@ -79,17 +145,7 @@ package body ICM20602.Raw is
    procedure Get_Raw_Measurement
      (Raw   : Byte_Array;
       Gyro  : out Raw_Vector;
-      Accel : out Raw_Vector)
-   is
-      use Interfaces;
-
-      function Cast is new Ada.Unchecked_Conversion
-        (Unsigned_16, Integer_16);
-
-      function Decode (Data : Byte_Array) return Integer_16 is
-         (Cast (Shift_Left (Unsigned_16 (Data (Data'First)), 8)
-            + Unsigned_16 (Data (Data'Last))));
-
+      Accel : out Raw_Vector) is
    begin
       Accel.X := Decode (Raw (16#3B# .. 16#3C#));
       Accel.Y := Decode (Raw (16#3D# .. 16#3E#));
@@ -98,6 +154,23 @@ package body ICM20602.Raw is
       Gyro.Y := Decode (Raw (16#45# .. 16#46#));
       Gyro.Z := Decode (Raw (16#47# .. 16#48#));
    end Get_Raw_Measurement;
+
+   ------------------------------
+   -- Set_Accelerometer_Offset --
+   ------------------------------
+
+   function Set_Accelerometer_Offset
+     (Value : Accelerometer_Offset_Vector) return Accelerometer_Offset_Data
+   is
+      type Int is delta 1.0 range -2.0**14 .. 2.0**14 - 1.0;
+
+      Raw : constant Raw_Vector :=
+        (Interfaces.Integer_16 (Int'(Value.X / Accelerometer_Offset'Small)),
+         Interfaces.Integer_16 (Int'(Value.Y / Accelerometer_Offset'Small)),
+         Interfaces.Integer_16 (Int'(Value.Z / Accelerometer_Offset'Small)));
+   begin
+      return Set_Raw_Accelerometer_Offset (Raw);
+   end Set_Accelerometer_Offset;
 
    -----------------------
    -- Set_Configuration --
@@ -229,6 +302,23 @@ package body ICM20602.Raw is
       return (Data_1, Data_2);
    end Set_Configuration;
 
+   --------------------------
+   -- Set_Gyroscope_Offset --
+   --------------------------
+
+   function Set_Gyroscope_Offset
+     (Value : Angular_Speed_Vector) return Gyroscope_Offset_Data
+   is
+      type Int is delta 1.0 range -2.0**15 .. 2.0**15 - 1.0;
+
+      Raw : constant Raw_Vector :=
+        (Interfaces.Integer_16 (Int'(Value.X / Scaled_Angular_Speed'Small)),
+         Interfaces.Integer_16 (Int'(Value.Y / Scaled_Angular_Speed'Small)),
+         Interfaces.Integer_16 (Int'(Value.Z / Scaled_Angular_Speed'Small)));
+   begin
+      return Set_Raw_Gyroscope_Offset (Raw);
+   end Set_Gyroscope_Offset;
+
    --------------------
    -- Set_Interrupts --
    --------------------
@@ -262,5 +352,20 @@ package body ICM20602.Raw is
    begin
       return (16#37# => INT_PIN_CFG, 16#38# => INT_ENABLE);
    end Set_Interrupts;
+
+   ----------------------------------
+   -- Set_Raw_Accelerometer_Offset --
+   ----------------------------------
+
+   function Set_Raw_Accelerometer_Offset
+     (Value : Raw_Vector) return Accelerometer_Offset_Data is
+      (Byte'Mod (Uncast (2 * Value.X) / 256),
+       Byte'Mod (2 * Value.X),
+       0,
+       Byte'Mod (Uncast (2 * Value.Y) / 256),
+       Byte'Mod (2 * Value.Y),
+       0,
+       Byte'Mod (Uncast (2 * Value.Z) / 256),
+       Byte'Mod (2 * Value.Z));
 
 end ICM20602.Raw;

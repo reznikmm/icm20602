@@ -1,4 +1,4 @@
---  SPDX-FileCopyrightText: 2024 Max Reznik <reznikmm@gmail.com>
+--  SPDX-FileCopyrightText: 2024-2025 Max Reznik <reznikmm@gmail.com>
 --
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
@@ -24,6 +24,7 @@ package ICM20602 is
    subtype Accelerometer_Full_Scale_Range is Positive range 2 .. 16
      with Static_Predicate =>
        Accelerometer_Full_Scale_Range in 2 | 4 | 8 | 16;
+   --  Full scale range for accelerometer: ±2g, ±4g, ±8g, ±16g
 
    subtype Average_Count is Positive range 1 .. 128
      with Static_Predicate =>
@@ -140,8 +141,8 @@ package ICM20602 is
    end record;
    --  A value read from the sensor in raw format
 
-   type Scaled_Angular_Speed is delta 1.0 / 2.0 ** 17
-     range -1.0 .. 1.0 - 1.0 / 2.0 ** 17;
+   type Scaled_Angular_Speed is delta 1.0 / 2.0**17
+     range -1.0 .. 1.0 - 1.0 / 2.0**17;
    --  The angular speed value is scaled such that 1.0 corresponds to 2000
    --  degrees per second.
 
@@ -151,8 +152,8 @@ package ICM20602 is
    --  Angular velocity values for each axis. X, Y and Z also known as
    --  Roll, Peach and Yaw angles.
 
-   type Acceleration is  delta 1.0 / 2.0 ** 14
-     range -16.0 .. 16.0 - 1.0 / 2.0 ** 14;
+   type Acceleration is delta 1.0 / 2.0**14
+     range -16.0 .. 16.0 - 1.0 / 2.0**14;
    --  The linear acceleration value is scaled such that 1.0 corresponds to
    --  1 G (9.8 m/s2).
 
@@ -160,6 +161,15 @@ package ICM20602 is
       X, Y, Z : Acceleration;
    end record;
    --  Linear acceleration values for each axis
+
+   type Accelerometer_Offset is delta 1.0 / 2.0**10
+     range -16.0 .. 16.0 - 1.0 / 2.0**10;
+   --  The accelerometer bias has 15 bits and ±16g range
+
+   type Accelerometer_Offset_Vector is record
+      X, Y, Z : Accelerometer_Offset;
+   end record;
+   --  Accelerometer bias for each axis
 
    Chip_Id : constant := 16#12#;
    --  Expected value for WHO_AM_I register

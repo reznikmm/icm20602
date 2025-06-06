@@ -40,12 +40,26 @@ package ICM20602.Internal is
 
    procedure Set_Gyroscope_Offset
      (Device  : Device_Context;
+      Value   : Angular_Speed_Vector;
+      Success : out Boolean);
+   --  Set REGISTER 19..24 GYRO OFFSET ADJUSTMENT REGISTER
+   --  Current scale???
+
+   procedure Set_Raw_Gyroscope_Offset
+     (Device  : Device_Context;
       Value   : Raw_Vector;
       Success : out Boolean);
    --  Set REGISTER 19..24 GYRO OFFSET ADJUSTMENT REGISTER
    --  Current scale???
 
    procedure Set_Accelerometer_Offset
+     (Device  : Device_Context;
+      Value   : Accelerometer_Offset_Vector;
+      Success : out Boolean);
+   --  Set REGISTER 119..126 ACCELEROMETER OFFSET ADJUSTMENT REGISTER
+   --  In +/- 16g scale. 15 bits!!!
+
+   procedure Set_Raw_Accelerometer_Offset
      (Device  : Device_Context;
       Value   : Raw_Vector;
       Success : out Boolean);

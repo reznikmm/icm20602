@@ -27,13 +27,28 @@ package body ICM20602.Internal is
       return Ok and Raw.Get_Chip_Id (Data) = Expect;
    end Check_Chip_Id;
 
+   ------------------------------
+   -- Set_Accelerometer_Offset --
+   ------------------------------
+
+   procedure Set_Accelerometer_Offset
+     (Device  : Device_Context;
+      Value   : Accelerometer_Offset_Vector;
+      Success : out Boolean)
+   is
+      Data : constant Raw.Accelerometer_Offset_Data :=
+        Raw.Set_Accelerometer_Offset (Value);
+   begin
+      Write (Device, Data, Success);
+   end Set_Accelerometer_Offset;
+
    --------------------------
    -- Set_Gyroscope_Offset --
    --------------------------
 
    procedure Set_Gyroscope_Offset
      (Device  : Device_Context;
-      Value   : Raw_Vector;
+      Value   : Angular_Speed_Vector;
       Success : out Boolean)
    is
       Data : constant Raw.Gyroscope_Offset_Data :=
@@ -43,19 +58,34 @@ package body ICM20602.Internal is
    end Set_Gyroscope_Offset;
 
    ------------------------------
-   -- Set_Accelerometer_Offset --
+   -- Set_Raw_Gyroscope_Offset --
    ------------------------------
 
-   procedure Set_Accelerometer_Offset
+   procedure Set_Raw_Gyroscope_Offset
+     (Device  : Device_Context;
+      Value   : Raw_Vector;
+      Success : out Boolean)
+   is
+      Data : constant Raw.Gyroscope_Offset_Data :=
+        Raw.Set_Raw_Gyroscope_Offset (Value);
+   begin
+      Write (Device, Data, Success);
+   end Set_Raw_Gyroscope_Offset;
+
+   ----------------------------------
+   -- Set_Raw_Accelerometer_Offset --
+   ----------------------------------
+
+   procedure Set_Raw_Accelerometer_Offset
      (Device  : Device_Context;
       Value   : Raw_Vector;
       Success : out Boolean)
    is
       Data : constant Raw.Accelerometer_Offset_Data :=
-        Raw.Set_Accelerometer_Offset (Value);
+        Raw.Set_Raw_Accelerometer_Offset (Value);
    begin
       Write (Device, Data, Success);
-   end Set_Accelerometer_Offset;
+   end Set_Raw_Accelerometer_Offset;
 
    ---------------------
    -- Set_Sample_Rate --
