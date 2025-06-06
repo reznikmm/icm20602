@@ -233,6 +233,7 @@ package body ICM20602.Raw is
       DEC2_CFG : constant Byte :=
         (if Value.Accelerometer.Power = Low_Power then
            (case Value.Accelerometer.Average is
+              when 1 => 0,
               when 4 => 0,
               when 8 => 1,
               when 16 => 2,
@@ -244,6 +245,8 @@ package body ICM20602.Raw is
            (case Value.Accelerometer.Filter.Rate is
                when Rate_4kHz => 1,
                when Rate_1kHz => 0)
+         elsif Value.Accelerometer.Power = Low_Power
+           and then Value.Accelerometer.Average = 1 then 1
          else 0);
 
       A_DLPF_CFG : constant Byte :=
@@ -258,7 +261,7 @@ package body ICM20602.Raw is
                when 5   => 6,
                when 420 => 7,
                when others => 0)
-         else 0);
+         else 7);  --  It seems in Low_Power only 7 works
 
       GYRO_CYCLE : constant Byte :=
         (if Value.Gyroscope.Power = Low_Power then 1 else 0);

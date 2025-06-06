@@ -30,7 +30,9 @@ package ICM20602 is
      with Static_Predicate =>
        Average_Count in 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128;
 
-   subtype Accelerometer_Average_Count is Average_Count range 4 .. 32;
+   subtype Accelerometer_Average_Count is Positive range 1 .. 32
+     with Static_Predicate =>
+       Accelerometer_Average_Count in 1 | 4 | 8 | 16 | 32;
 
    type Sensor_Rate is (Rate_4kHz, Rate_1kHz, Rate_8kHz, Rate_32kHz);
    pragma Ordered (Sensor_Rate);
@@ -40,8 +42,6 @@ package ICM20602 is
 
    subtype Accelerometer_Sensor_Rate is
      Sensor_Rate range Rate_4kHz .. Rate_1kHz;
-   --  What is ODR for Rate_4kHz_x? I guess 4kHz.
-   --  What is ODR for Rate_4kHz_x in low-power mode?
 
    subtype Low_Pass_Filter_Bandwidth is Positive range 5 .. 8173
      with Static_Predicate => Low_Pass_Filter_Bandwidth in
@@ -112,10 +112,8 @@ package ICM20602 is
             case Power is
                when Low_Noise =>
                   Filter : Accelerometer_Low_Pass_Filter_Configuration;
-                  --  Average??? Does Average works in Low-Noise mode?
                when Low_Power =>
                   Average : Accelerometer_Average_Count;
-                  --  Does Average works in Low-Noise mode?
                when Off =>
                   null;
             end case;
@@ -127,8 +125,9 @@ package ICM20602 is
    --
    --  For Gyroscope Low_Noise mode, it only effective when Gyroscope
    --  Low_Pass_Filter_Bandwidth < 250.
-   --  For Gyroscope Low_Power mode it should be >= 3 (max ODR = 333Hz)
-   --  For Accelerometer Low_Power mode it should be >= 2 (max ODR = 500Hz)
+   --  For Gyroscope Low_Power mode it should be >= 3 (max ODR = 333Hz).
+   --  For Accelerometer Low_Power mode it should be >= 2 (max ODR = 500Hz).
+   --  Has no effect if Accelerometer.Filter = Rate_4kHz.
 
    type Sensor_Configuration is record
       Gyroscope     : Gyroscope_Configuration;
