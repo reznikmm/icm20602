@@ -10,6 +10,26 @@ website = "https://github.com/reznikmm/icm20602"
 tags = ["sensor", "accelerometer", "gyroscope", "driver", "icm-20602"]
 project-files = ["gnat/icm20602.gpr"]
 
+long-description = '''
+# Driver for ICM-20602 magnetic sensor.
+
+The ICM-20602 driver enables the following functionalities:
+
+- Detect the presence of the sensor.
+- Perform a reset operation.
+- Configure the range, the parameters of the digital filter and sampling rate
+  for each channel.
+- Adjust offsets for gyroscope and accelerometer.
+- Conduct measurements as raw 16-bit values and scaled values.
+- Configure interrupts ~~and Wake-on-motion (TBD)~~
+
+The driver supports usage both with and without the Ada Driver Library,
+either via generic instantiation or by instantiating tagged type object.
+
+More drivers in this style:
+[driver index](https://github.com/reznikmm/reznikmm/blob/main/drivers.md).
+'''
+
 [configuration]
 output_dir = "gnat"
 generate_ada = false
