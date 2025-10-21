@@ -6,7 +6,7 @@
 with Interfaces;
 
 package ICM20602 is
-   pragma Preelaborate;
+   pragma Pure;
    pragma Discard_Names;
 
    type Power_Mode is
