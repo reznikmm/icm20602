@@ -123,6 +123,18 @@ package ICM20602.Raw is
    --  Decode raw measurement. Raw data should contain Measurement_Data'Range
    --  items.
 
+   procedure Get_Raw_Measurement
+     (Raw   : Byte_Array;
+      Gyro  : out Raw_Vector;
+      Accel : out Raw_Vector;
+      Temp  : out Interfaces.Integer_16)
+     with Pre =>
+       Measurement_Data'First in Raw'Range
+         and then Measurement_Data'Last in Raw'Range;
+   --
+   --  Decode raw measurement (including temperature). Raw data should contain
+   --  Measurement_Data'Range items.
+
    procedure Get_Measurement
      (Raw   : Byte_Array;
       GFSR  : Gyroscope_Full_Scale_Range;

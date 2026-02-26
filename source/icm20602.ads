@@ -177,6 +177,12 @@ package ICM20602 is
    end record;
    --  Accelerometer bias for each axis
 
+   type Celsius is delta 1.0 / 2.0**8 range -74.0 .. 126.0;
+   --  Temperature in celsius degree
+
+   function To_Celsius (Value : Interfaces.Integer_16) return Celsius;
+   --  Convert raw sensor temperature to celsius degree
+
    Chip_Id : constant := 16#12#;
    --  Expected value for WHO_AM_I register
 
@@ -188,5 +194,12 @@ package ICM20602 is
    type Byte_Array is array (Register_Address range <>) of Byte;
    --  Bytes to be exchanged with registers. Index is a register address, while
    --  elements are corresponding register values.
+
+private
+
+   Celsius_Scale : constant := 1.0 / Celsius'Small / 326.8;
+
+   function To_Celsius (Value : Interfaces.Integer_16) return Celsius is
+      (Celsius'Small * Integer (Value) * Celsius_Scale + 25.0);
 
 end ICM20602;

@@ -157,6 +157,20 @@ package body ICM20602.Raw is
       Gyro.Z := Decode (Raw (16#47# .. 16#48#));
    end Get_Raw_Measurement;
 
+   -------------------------
+   -- Get_Raw_Measurement --
+   -------------------------
+
+   procedure Get_Raw_Measurement
+     (Raw   : Byte_Array;
+      Gyro  : out Raw_Vector;
+      Accel : out Raw_Vector;
+      Temp  : out Interfaces.Integer_16) is
+   begin
+      Get_Raw_Measurement (Raw, Gyro, Accel);
+      Temp := Decode (Raw (16#41# .. 16#42#));
+   end Get_Raw_Measurement;
+
    ------------------------------
    -- Set_Accelerometer_Offset --
    ------------------------------
