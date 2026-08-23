@@ -29,6 +29,19 @@ package ICM20602.SPI is
    function Is_Reseting return Boolean;
    --  Check if the reset is in progress.
 
+   procedure Enable_Interrupts
+     (Active_Is_Low      : Boolean := False;
+      Is_Open_Drain      : Boolean := False;
+      Is_Latched         : Boolean := False;
+      Clear_On_Read      : Boolean := False;
+      FSync_Enabled      : Boolean := False;
+      Wake_On_X_Enabled  : Boolean := False;
+      Wake_On_Y_Enabled  : Boolean := False;
+      Wake_On_Z_Enabled  : Boolean := False;
+      Gyro_Ready_Enabled : Boolean := False;
+      Data_Ready_Enabled : Boolean := False;
+      Success            : out Boolean);
+
    procedure Configure
      (Value   : Sensor_Configuration;
       Success : out Boolean);

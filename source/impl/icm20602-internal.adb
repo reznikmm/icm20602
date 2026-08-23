@@ -121,6 +121,40 @@ package body ICM20602.Internal is
       end if;
    end Configure;
 
+   -----------------------
+   -- Enable_Interrupts --
+   -----------------------
+
+   procedure Enable_Interrupts
+     (Device             : Device_Context;
+      Active_Is_Low      : Boolean := False;
+      Is_Open_Drain      : Boolean := False;
+      Is_Latched         : Boolean := False;
+      Clear_On_Read      : Boolean := False;
+      FSync_Enabled      : Boolean := False;
+      Wake_On_X_Enabled  : Boolean := False;
+      Wake_On_Y_Enabled  : Boolean := False;
+      Wake_On_Z_Enabled  : Boolean := False;
+      Gyro_Ready_Enabled : Boolean := False;
+      Data_Ready_Enabled : Boolean := False;
+      Success            : out Boolean)
+   is
+      Data : constant Raw.Configure_Interrupts_Data :=
+        Raw.Set_Interrupts
+          (Active_Is_Low      => Active_Is_Low,
+           Is_Open_Drain      => Is_Open_Drain,
+           Is_Latched         => Is_Latched,
+           Clear_On_Read      => Clear_On_Read,
+           FSync_Enabled      => FSync_Enabled,
+           Wake_On_X_Enabled  => Wake_On_X_Enabled,
+           Wake_On_Y_Enabled  => Wake_On_Y_Enabled,
+           Wake_On_Z_Enabled  => Wake_On_Z_Enabled,
+           Gyro_Ready_Enabled => Gyro_Ready_Enabled,
+           Data_Ready_Enabled => Data_Ready_Enabled);
+   begin
+      Write (Device, Data, Success);
+   end Enable_Interrupts;
+
    ----------------
    -- Initialize --
    ----------------

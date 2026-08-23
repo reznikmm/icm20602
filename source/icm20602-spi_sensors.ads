@@ -39,6 +39,20 @@ package ICM20602.SPI_Sensors is
    overriding function Is_Reseting (Self : ICM20602_SPI_Sensor) return Boolean;
    --  Check if the reset is in progress.
 
+   overriding procedure Enable_Interrupts
+     (Self               : in out ICM20602_SPI_Sensor;
+      Active_Is_Low      : Boolean := False;
+      Is_Open_Drain      : Boolean := False;
+      Is_Latched         : Boolean := False;
+      Clear_On_Read      : Boolean := False;
+      FSync_Enabled      : Boolean := False;
+      Wake_On_X_Enabled  : Boolean := False;
+      Wake_On_Y_Enabled  : Boolean := False;
+      Wake_On_Z_Enabled  : Boolean := False;
+      Gyro_Ready_Enabled : Boolean := False;
+      Data_Ready_Enabled : Boolean := False;
+      Success            : out Boolean);
+
    overriding procedure Configure
      (Self    : in out ICM20602_SPI_Sensor;
       Value   : Sensor_Configuration;

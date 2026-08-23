@@ -77,6 +77,20 @@ package ICM20602.Internal is
       Value   : Sensor_Configuration;
       Success : out Boolean);
 
+   procedure Enable_Interrupts
+     (Device             : Device_Context;
+      Active_Is_Low      : Boolean := False;
+      Is_Open_Drain      : Boolean := False;
+      Is_Latched         : Boolean := False;
+      Clear_On_Read      : Boolean := False;
+      FSync_Enabled      : Boolean := False;
+      Wake_On_X_Enabled  : Boolean := False;
+      Wake_On_Y_Enabled  : Boolean := False;
+      Wake_On_Z_Enabled  : Boolean := False;
+      Gyro_Ready_Enabled : Boolean := False;
+      Data_Ready_Enabled : Boolean := False;
+      Success            : out Boolean);
+
    procedure Reset
      (Device  : Device_Context;
       Success : out Boolean);
